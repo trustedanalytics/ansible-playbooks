@@ -1,0 +1,152 @@
+---
+name: bosh
+
+releases:
+- name: bosh
+  url: https://bosh.io/d/github.com/cloudfoundry/bosh?v=223
+  sha1: 4fdb241703160f5fc426ee6f2e16a9d125073460
+- name: bosh-aws-cpi
+  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-aws-cpi-release?v=36
+  sha1: db2a6c6cdd5ff9f77bf083e10118fa72e1f5e181
+
+resource_pools:
+- name: vms
+  network: private
+  stemcell:
+    url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v=3012
+    sha1: 3380b55948abe4c437dee97f67d2d8df4eec3fc1
+  cloud_properties:
+    instance_type: m3.xlarge
+    ephemeral_disk: {size: 25_000, type: gp2}
+    availability_zone: {{ bosh_availability_zone }} # <--- Replace with Availability Zone
+{% if bosh_iam_instance_profile is not none %}
+    iam_instance_profile: {{ bosh_iam_instance_profile }}
+{% endif %}
+
+disk_pools:
+- name: disks
+  disk_size: 20_000
+  cloud_properties: {type: gp2}
+
+networks:
+- name: private
+  type: manual
+  subnets:
+  - range: {{ bosh_range }}
+    gateway: {{ bosh_gateway }}
+    dns: [{{ bosh_dns | join(', ') }}]
+    cloud_properties: {subnet: {{ bosh_subnet_id }}} # <--- Replace with Subnet ID
+{% if bosh_elastic_ip is not none %}
+- name: public
+  type: vip
+{% endif %}
+
+jobs:
+- name: bosh
+  instances: 1
+
+  templates:
+  - {name: nats, release: bosh}
+  - {name: redis, release: bosh}
+  - {name: postgres, release: bosh}
+  - {name: blobstore, release: bosh}
+  - {name: director, release: bosh}
+  - {name: health_monitor, release: bosh}
+  - {name: registry, release: bosh}
+  - {name: aws_cpi, release: bosh-aws-cpi}
+
+  resource_pool: vms
+  persistent_disk_pool: disks
+
+  networks:
+  - name: private
+    static_ips: [{{ bosh_private_ip }}]
+    default: [dns, gateway]
+{% if bosh_elastic_ip is not none %}
+  - name: public
+    static_ips: [{{ bosh_elastic_ip }}] # <--- Replace with Elastic IP
+{% endif %}
+
+  properties:
+    nats:
+      address: 127.0.0.1
+      user: nats
+      password: {{ bosh_nats_password }}
+
+    redis:
+      listen_address: 127.0.0.1
+      address: 127.0.0.1
+      password: {{ bosh_redis_password }}
+
+    postgres: &db
+      listen_address: 127.0.0.1
+      host: 127.0.0.1
+      user: postgres
+      password: {{ bosh_postgres_password }}
+      database: bosh
+      adapter: postgres
+
+    registry:
+      address: {{ bosh_private_ip }}
+      host: {{ bosh_private_ip }}
+      db: *db
+      http: {user: admin, password: {{ bosh_registry_password }}, port: 25777}
+      username: admin
+      password: {{ bosh_registry_password }}
+      port: 25777
+
+    blobstore:
+      address: {{ bosh_private_ip }}
+      port: 25250
+      provider: dav
+      director: {user: director, password: {{ bosh_director_password }}}
+      agent: {user: agent, password: {{ bosh_agent_password }}}
+
+    director:
+      address: 127.0.0.1
+      name: my-bosh
+      db: *db
+      cpi_job: aws_cpi
+      max_threads: 10
+      user_management:
+        provider: local
+        local:
+          users:
+          - {name: admin, password: {{ bosh_admin_password }}}
+          - {name: hm, password: {{ bosh_hm_password }}}
+
+    hm:
+      director_account: {user: hm, password: {{ bosh_hm_password }}}
+      resurrector_enabled: true
+
+    aws: &aws
+{% if bosh_iam_instance_profile is not none %}
+      credentials_source: env_or_profile
+{% elif bosh_access_key_id is not none and bosh_secret_access_key is not none %}
+      access_key_id: {{ bosh_access_key_id }} # <--- Replace with AWS Access Key ID
+      secret_access_key: {{ bosh_secret_access_key }} # <--- Replace with AWS Secret Key
+{% endif %}
+      default_key_name: bosh
+      default_security_groups: [bosh]
+      region: {{ bosh_region }}
+
+    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_private_ip }}:4222"}
+
+    ntp: &ntp [{{ bosh_ntp | join(', ') }}]
+
+cloud_provider:
+  template: {name: aws_cpi, release: bosh-aws-cpi}
+
+  ssh_tunnel:
+    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_private_ip }} # <--- Replace with your Elastic IP address
+    port: 22
+    user: vcap
+    private_key: ./bosh.pem # Path relative to this manifest file
+
+  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_private_ip }}:6868" # <--- Replace with Elastic IP
+
+  properties:
+    aws: *aws
+    agent: {mbus: "https://mbus:{{ bosh_mbus_password }}@0.0.0.0:6868"}
+    blobstore: {provider: local, path: /var/vcap/micro_bosh/data/cache}
+    ntp: *ntp

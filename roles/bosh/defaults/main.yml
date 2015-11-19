@@ -1,0 +1,44 @@
+# Copyright (c) 2015 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+---
+
+bosh_deployment_directory: "{{ ansible_env['HOME'] }}/my-bosh"
+bosh_availability_zone: null
+bosh_subnet_id: null
+bosh_elastic_ip: null
+bosh_access_key_id: null
+bosh_secret_access_key: null
+bosh_range: 10.0.0.0/24
+bosh_gateway: 10.0.0.1
+bosh_dns:
+  - 10.0.0.2
+bosh_private_ip: 10.0.0.6
+bosh_nats_password: nats-password
+bosh_redis_password: redis-password
+bosh_postgres_password: postgres-password
+bosh_registry_password: admin
+bosh_director_password: director-password
+bosh_agent_password: agent-password
+bosh_admin_password: admin
+bosh_hm_password: hm-password
+bosh_region: us-east-1
+bosh_ntp:
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
+bosh_mbus_password: mbus-password
+bosh_iam_instance_profile: null
+
+# vi:et:sw=2 ts=2 sts=2 ft=ansible
