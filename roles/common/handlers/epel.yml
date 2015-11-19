@@ -15,25 +15,15 @@
 
 ---
 
-- apt: name=linux-image-extra-{{ ansible_kernel }} state=present
+- name: Enable the 'optional' repository
+  command: yum-config-manager --enable \*optional\*
   become: yes
-  when: ansible_os_family == 'Debian'
+  when: ansible_distribution == 'Red Hat Enterprise Linux'
 
-- include: iptables.yml
-  when: ansible_os_family == 'RedHat'
-
-- include: selinux.yml
-  when: ansible_os_family == 'RedHat'
-
-- include: ufw.yml
-  when: ansible_distribution == 'Ubuntu'
-
-- include: ntp.yml
-- include: unzip.yml
-- include: git.yml
-- include: resolver_fact.yml
-
-- include: epel.yml
-  when: ansible_os_family == 'RedHat'
+- name: Enable the 'extras' repository
+  command: yum-config-manager --enable \*extras\*
+  become: yes
+  when: ansible_distribution == 'Red Hat Enterprise Linux' and
+        ansible_lsb.major_release | int == 7
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
