@@ -32,4 +32,8 @@
     - uaac
   become: yes
 
+- hosts: jump-boxes
+  roles:
+    - bosh
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
