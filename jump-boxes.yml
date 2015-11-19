@@ -27,6 +27,7 @@
 
 - hosts: jump-boxes
   roles:
+    - bosh-init
     - bosh-cli
     - cf-cli 
     - uaac
