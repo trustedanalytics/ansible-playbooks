@@ -127,7 +127,7 @@ jobs:
       secret_access_key: {{ bosh_secret_access_key }} # <--- Replace with AWS Secret Key
 {% endif %}
       default_key_name: bosh
-      default_security_groups: [bosh]
+      default_security_groups: [{{ bosh_default_security_groups | join(', ') }}]
       region: {{ bosh_region }}
 
     agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_private_ip }}:4222"}

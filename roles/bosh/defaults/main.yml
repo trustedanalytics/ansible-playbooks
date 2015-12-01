@@ -34,6 +34,8 @@ bosh_director_password: director-password
 bosh_agent_password: agent-password
 bosh_admin_password: admin
 bosh_hm_password: hm-password
+bosh_default_security_groups:
+  - bosh
 bosh_region: us-east-1
 bosh_ntp:
   - 0.pool.ntp.org
