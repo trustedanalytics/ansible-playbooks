@@ -31,4 +31,6 @@
   notify:
     - Deploy
 
+- meta: flush_handlers
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
