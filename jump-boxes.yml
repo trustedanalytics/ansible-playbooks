@@ -34,6 +34,10 @@
   become: yes
 
 - hosts: jump-boxes
+  pre_tasks:
+    - set_fact:
+        bosh_gateway: "{{ bosh_range | nthhost(1) }}"                                   
+        bosh_private_ip: "{{ bosh_range | nthhost(4) }}" 
   roles:
     - bosh
 
