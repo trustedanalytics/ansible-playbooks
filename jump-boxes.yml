@@ -38,7 +38,36 @@
     - set_fact:
         bosh_gateway: "{{ bosh_range | nthhost(1) }}"                                   
         bosh_private_ip: "{{ bosh_range | nthhost(4) }}" 
+    - set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
+      with_items:
+        - bosh_nats_password
+        - bosh_redis_password
+        - bosh_postgres_password
+        - bosh_registry_password
+        - bosh_director_password
+        - bosh_agent_password
+        - bosh_admin_password
+        - bosh_hm_password
   roles:
     - bosh
+
+- hosts: jump-boxes
+  pre_tasks:
+    - set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
+      with_items:
+        - cf_bulk_api_password
+        - cf_ccdb_encryption_key
+        - cf_staging_upload_password
+        - cf_ccdb_password
+        - cf_uaadb_user_password
+        - cf_loggregator_endpoint_shared_secret
+        - cf_nats_password
+        - cf_admin_secret
+        - cf_cc_routing_secret
+        - cf_cloud_controller_username_lookup_secret
+        - cf_doppler_secret
+        - cf_gorouter_secret
+        - cf_login_client_secret
+        - cf_notifications_client_secret
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
