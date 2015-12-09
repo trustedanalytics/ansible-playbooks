@@ -42,5 +42,7 @@ bosh_ntp:
   - 1.pool.ntp.org
 bosh_mbus_password: mbus-password
 bosh_iam_instance_profile: null
+bosh_default_key_name: bosh
+bosh_private_key: "{{ bosh_deployment_directory }}/{{ bosh_default_key_name }}.yml"
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

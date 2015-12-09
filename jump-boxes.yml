@@ -52,6 +52,8 @@
         - bosh_agent_password
         - bosh_admin_password
         - bosh_hm_password
+    - set_fact: bosh_default_key_name={{ stack_name }}-bosh
+      when: stack_name is defined
   roles:
     - bosh
 

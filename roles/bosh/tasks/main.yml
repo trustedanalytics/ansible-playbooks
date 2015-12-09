@@ -19,7 +19,7 @@
   file: path={{ bosh_deployment_directory }} state=directory
 
 - name: Create a key pair
-  ec2_key: name=bosh aws_access_key={{ bosh_access_key_id }}
+  ec2_key: name={{ bosh_default_key_name }} aws_access_key={{ bosh_access_key_id }}
            aws_secret_key={{ bosh_secret_access_key }} region={{ bosh_region }}
            wait=yes state=present
   register: ec2_key_result

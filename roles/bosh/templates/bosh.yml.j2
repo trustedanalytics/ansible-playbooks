@@ -126,7 +126,7 @@ jobs:
       access_key_id: {{ bosh_access_key_id }} # <--- Replace with AWS Access Key ID
       secret_access_key: {{ bosh_secret_access_key }} # <--- Replace with AWS Secret Key
 {% endif %}
-      default_key_name: bosh
+      default_key_name: {{ bosh_default_key_name }}
       default_security_groups: [{{ bosh_default_security_groups | join(', ') }}]
       region: {{ bosh_region }}
 
@@ -141,7 +141,7 @@ cloud_provider:
     host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_private_ip }} # <--- Replace with your Elastic IP address
     port: 22
     user: vcap
-    private_key: ./bosh.pem # Path relative to this manifest file
+    private_key: {{ bosh_private_key }} # Path relative to this manifest file
 
   mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_private_ip }}:6868" # <--- Replace with Elastic IP
 

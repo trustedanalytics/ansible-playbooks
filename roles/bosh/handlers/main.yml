@@ -17,7 +17,7 @@
 
 - name: Save the private key file
   copy: content="{{ ec2_key_result.key.private_key }}"
-        dest={{ bosh_deployment_directory }}/bosh.pem mode=0400
+        dest={{ bosh_private_key }} mode=0400
 
 - name: Deploy
   shell: bosh-init deploy ./bosh.yml chdir={{ bosh_deployment_directory }}
