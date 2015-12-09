@@ -38,6 +38,10 @@
     - set_fact:
         bosh_gateway: "{{ bosh_range | nthhost(1) }}"                                   
         bosh_private_ip: "{{ bosh_range | nthhost(4) }}" 
+    - set_fact:
+        bosh_dns:
+          - "{{ vpc_cidr_block | nthhost(2) }}"
+      when: vpc_cidr_block is defined
     - set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
       with_items:
         - bosh_nats_password
