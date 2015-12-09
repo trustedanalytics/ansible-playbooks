@@ -30,7 +30,7 @@ def main():
             keyword, value = line.rstrip().split(None, 1)
 
             if keyword == 'nameserver':
-                nameservers += value
+                nameservers.append(value)
             elif keyword == 'domain':
                 domain = value
             elif keyword == 'search':
