@@ -1,0 +1,59 @@
+# Copyright (c) 2015 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+---
+
+cf_director_uuid: null
+cf_environment: cf
+cf_subnet_id_1: null
+cf_subnet_id_2: null
+cf_app_domain: "{{ cf_domain }}"
+cf_bulk_api_password: null
+cf_ccdb_encryption_key: null
+cf_domain: null
+cf_staging_upload_password: null
+cf_staging_upload_user: staging_upload_user
+cf_ccdb_address: null
+cf_ccdb_scheme: postgres
+cf_ccdb_port: 5524
+cf_ccdb_user_name: ccadmin
+cf_ccdb_user_password: null
+cf_ccdb_user: admin
+cf_disk_mb: null
+cf_memory_mb: null
+cf_loggregator_endpoint_shared_secret: null
+cf_nats_password: null
+cf_nats_user: nats
+cf_system_domain: "{{ cf_domain }}"
+cf_system_domain_organization: default_organization
+cf_admin_secret: null
+cf_cc_client_secret: null
+cf_cc_routing_secret: null
+cf_cloud_controller_username_lookup_secret: null
+cf_doppler_secret: null
+cf_gorouter_secret: null
+cf_login_client_secret: null
+cf_notifications_client_secret: null
+cf_admin_password: null
+cf_uaadb_address: null
+cf_uaadb_scheme: postgres
+cf_uaadb_port: 5524
+cf_uaadb_user_name: uaaadmin
+cf_uaadb_user_password: null
+cf_uaadb_user: admin
+cf_zone_1: null
+cf_zone_2: null
+
+# vi:et:sw=2 ts=2 sts=2 ft=ansible

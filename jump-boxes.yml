@@ -64,16 +64,19 @@
         - cf_bulk_api_password
         - cf_ccdb_encryption_key
         - cf_staging_upload_password
-        - cf_ccdb_password
-        - cf_uaadb_user_password
+        - cf_ccdb_user_password
         - cf_loggregator_endpoint_shared_secret
         - cf_nats_password
         - cf_admin_secret
+        - cf_cc_client_secret
         - cf_cc_routing_secret
         - cf_cloud_controller_username_lookup_secret
         - cf_doppler_secret
         - cf_gorouter_secret
         - cf_login_client_secret
         - cf_notifications_client_secret
+        - cf_uaadb_user_password
+  roles:
+    - cf
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
