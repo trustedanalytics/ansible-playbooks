@@ -37,4 +37,6 @@
 
 - include: boto.yml
 
+- ec2_facts:
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
