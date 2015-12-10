@@ -18,8 +18,8 @@
 - hosts: all
   tasks:
     - set_fact:
-        stack: "{{ lookup('ini', 'stack section=main file=/etc/cfn/cfn-hup.conf') }}"
-        region: "{{ lookup('ini', 'region section=main file=/etc/cfn/cfn-hup.conf') }}"
+        stack: "{{ lookup('file', '/etc/cfn/cfn-hup.conf') | regex_replace('^stack ?= ?(.*)$', '\\1') }}"
+        region: "{{ lookup('file', '/etc/cfn/cfn-hup.conf') | regex_replace('^region ?= ?(.*)$', '\\1') }}"
 
 - hosts: all
   roles:
