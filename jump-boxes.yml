@@ -15,14 +15,16 @@
 
 ---
 
-- hosts: jump-boxes
+- hosts: Create a Key Pair
   handlers:
     - name: Signal a wait condition handle
       command: cfn-signal -s true -r 'The public key file imported.' {{ key_name_wait_condition_handle }}
   tasks:
-    - user: name={{ ansible_user_id }} generate_ssh_key=yes
+    - name: Create an RSA key pair
+      user: name={{ ansible_user_id }} generate_ssh_key=yes
       register: user_result
-    - ec2_key:
+    - name: Import a key pair
+      ec2_key:
         name: "{{ stack }}"
         key_material: "{{ user_result.ssh_public_key }}"
         region: "{{ region }}"
@@ -30,21 +32,25 @@
         state: present
       notify:
         - Signal a wait condition handle
-    - set_fact:
+    - name: Set the key pair used by BOSH
+      set_fact:
         bosh_default_key_name: "{{ stack }}"
         bosh_private_key: "{{ user_result.ssh_key_file }}"
 
-- hosts: jump-boxes
+- name: Install Ruby
+  hosts: jump-boxes
   roles:
     - rvm_io.rvm1-ruby
   post_tasks:
     # http://www.nokogiri.org/tutorials/installing_nokogiri.html#ubuntu___debian
-    - apt: name=libgmp-dev state=present
+    - name: Install libgmp
+      apt: name=libgmp-dev state=present
       become: yes
       when: "'ruby-2.2.3' in rvm1_rubies and ansible_distribution == 'Ubuntu'"
   become: yes
 
-- hosts: jump-boxes
+- name: Install command line interfaces
+  hosts: jump-boxes
   roles:
     - bosh-init
     - bosh-cli
@@ -52,15 +58,18 @@
     - uaac
   become: yes
 
-- hosts: jump-boxes
+- name: Install BOSH
+  hosts: jump-boxes
   pre_tasks:
-    - set_fact:
+    - name: Configure the Director
+      set_fact:
         bosh_gateway: "{{ bosh_range | nthhost(1) }}"                                   
         bosh_dns: "{{ vpc_cidr_block | nthhost(2) }}"
         bosh_private_ip: "{{ bosh_range | nthhost(4) }}" 
         bosh_region: "{{ region }}"
         bosh_ntp: "{{ ntp_server }}"
-    - set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
+    - name: Generate passwords
+      set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
       with_items:
         - bosh_nats_password
         - bosh_redis_password
@@ -73,9 +82,11 @@
   roles:
     - bosh
 
-- hosts: jump-boxes
+- name: Deploy Cloud Foundry
+  hosts: jump-boxes
   pre_tasks:
-    - set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
+    - name: Generate passwords
+      set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
       with_items:
         - cf_bulk_api_password
         - cf_ccdb_encryption_key
