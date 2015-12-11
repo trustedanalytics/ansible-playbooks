@@ -16,12 +16,6 @@
 ---
 
 - hosts: all
-  tasks:
-    - set_fact:
-        stack: "{{ lookup('file', '/etc/cfn/cfn-hup.conf') | regex_replace('^stack ?= ?(.*)$', '\\1') }}"
-        region: "{{ lookup('file', '/etc/cfn/cfn-hup.conf') | regex_replace('^region ?= ?(.*)$', '\\1') }}"
-
-- hosts: all
   roles:
     - common
 
