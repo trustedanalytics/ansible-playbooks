@@ -25,7 +25,7 @@
     - name: Install libgmp
       apt: name=libgmp-dev state=present
       become: yes
-      when: 'ruby-2.2.3' in rvm1_rubies and ansible_distribution == 'Ubuntu'
+      when: "'ruby-2.2.3' in rvm1_rubies and ansible_distribution == 'Ubuntu'"
     - name: Generate passwords
       set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
       with_items:
