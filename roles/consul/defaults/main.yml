@@ -16,7 +16,7 @@
 ---
 
 consul_version: 0.6.0
-consul_package: https://dl.bintray.com/mitchellh/consul/{{ consul_version }}_{{ ansible_system | lower }}_amd64.zip
+consul_package: https://releases.hashicorp.com/consul/{{ consul_version }}/consul_{{ consul_version }}_{{ ansible_system | lower }}_amd64.zip
 consul_options: []
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
