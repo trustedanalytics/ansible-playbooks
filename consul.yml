@@ -27,6 +27,8 @@
         dest: "{{ consul_config_dir }}/basic_config.json"
         validate: python -mjson.tool %s
       become: yes
+    - set_fact: consul_options="{{ consul_options | union(['-recursor ' + item]) }}"
+      with_items: ansible_local['resolver']['nameservers'] | difference(['127.0.0.1']) | list
   roles:
     - consul
   post_tasks:
