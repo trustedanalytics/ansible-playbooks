@@ -15,59 +15,17 @@
 
 ---
 
-- hosts: Create a Key Pair
+- name: Install BOSH
+  hosts: jump-boxes
   handlers:
     - name: Signal a wait condition handle
       command: cfn-signal -s true -r 'The public key file imported.' {{ key_name_wait_condition_handle }}
-  tasks:
-    - name: Create an RSA key pair
-      user: name={{ ansible_user_id }} generate_ssh_key=yes
-      register: user_result
-    - name: Import a key pair
-      ec2_key:
-        name: "{{ stack }}"
-        key_material: "{{ user_result.ssh_public_key }}"
-        region: "{{ region }}"
-        wait: yes
-        state: present
-      notify:
-        - Signal a wait condition handle
-    - name: Set the key pair used by BOSH
-      set_fact:
-        bosh_default_key_name: "{{ stack }}"
-        bosh_private_key: "{{ user_result.ssh_key_file }}"
-
-- name: Install Ruby
-  hosts: jump-boxes
-  roles:
-    - rvm_io.rvm1-ruby
-  post_tasks:
+  pre_tasks:
     # http://www.nokogiri.org/tutorials/installing_nokogiri.html#ubuntu___debian
     - name: Install libgmp
       apt: name=libgmp-dev state=present
       become: yes
-      when: "'ruby-2.2.3' in rvm1_rubies and ansible_distribution == 'Ubuntu'"
-  become: yes
-
-- name: Install command line interfaces
-  hosts: jump-boxes
-  roles:
-    - bosh-init
-    - bosh-cli
-    - cf-cli 
-    - uaac
-  become: yes
-
-- name: Install BOSH
-  hosts: jump-boxes
-  pre_tasks:
-    - name: Configure the Director
-      set_fact:
-        bosh_gateway: "{{ bosh_range | nthhost(1) }}"                                   
-        bosh_dns: "{{ vpc_cidr_block | nthhost(2) }}"
-        bosh_private_ip: "{{ bosh_range | nthhost(4) }}" 
-        bosh_region: "{{ region }}"
-        bosh_ntp: "{{ ntp_server }}"
+      when: 'ruby-2.2.3' in rvm1_rubies and ansible_distribution == 'Ubuntu'
     - name: Generate passwords
       set_fact: "{{ item }}=\"{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}\""
       with_items:
@@ -79,7 +37,24 @@
         - bosh_agent_password
         - bosh_admin_password
         - bosh_hm_password
+    - name: Create an RSA key pair
+      user: name={{ ansible_user_id }} generate_ssh_key=yes
+      register: user_result
+    - name: Import a key pair
+      ec2_key:
+        name: "{{ bosh_default_key_name }}"
+        key_material: "{{ user_result.ssh_public_key }}"
+        region: "{{ bosh_region }}"
+        wait: yes
+        state: present
+      notify:
+        - Signal a wait condition handle
+    - meta: flush_handlers
+    - name: Set the key pair used by BOSH
+      set_fact:
+        bosh_private_key: "{{ user_result.ssh_key_file }}"
   roles:
+    - rvm_io.rvm1-ruby
     - bosh
 
 - name: Deploy Cloud Foundry
