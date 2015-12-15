@@ -15,29 +15,12 @@
 
 ---
 
-- apt: name=linux-image-extra-{{ ansible_kernel }} state=present
+- apt: name=python-pip state=present
   become: yes
   when: ansible_os_family == 'Debian'
 
-- include: iptables.yml
+- yum: name=python-pip state=present
+  become: yes
   when: ansible_os_family == 'RedHat'
-
-- include: selinux.yml
-  when: ansible_os_family == 'RedHat'
-
-- include: ufw.yml
-  when: ansible_distribution == 'Ubuntu'
-
-- include: ntp.yml
-- include: unzip.yml
-- include: git.yml
-
-- include: epel.yml
-  when: ansible_os_family == 'RedHat'
-
-- include: boto.yml
-- include: pip.yml
-
-- ec2_facts:
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
