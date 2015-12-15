@@ -15,11 +15,26 @@
 
 ---
 
-- hosts: all
-  roles:
-    - common
+- get_url: url={{ consul_package }} dest=/tmp
+  register: get_url_result
 
-- include: consul.yml
-- include: jump-boxes.yml
+- unarchive: src={{ get_url_result.dest }} dest=/usr/local/bin copy=no
+             creates=/usr/local/bin/consul mode=a+x
+  become: yes
+
+- file: path=/etc/service state=directory
+  become: yes
+
+- template: src=consul_flags.j2 dest=/etc/service/consul
+  notify:
+    - Restart the agent
+  become: yes
+
+- template: src=upstart.conf.j2 dest=/etc/init/consul.conf
+  notify:
+    - Restart the agent
+  become: yes
+
+- service: name=consul state=started enabled=yes
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

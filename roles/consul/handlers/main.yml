@@ -15,11 +15,8 @@
 
 ---
 
-- hosts: all
-  roles:
-    - common
-
-- include: consul.yml
-- include: jump-boxes.yml
+- name: Restart the agent
+  service: name=consul state=restarted
+  become: yes
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
