@@ -15,11 +15,30 @@
 
 ---
 
-rvm1_rubies:
-  - 'ruby-2.2.3'
+consul_config_dir: /etc/consul.d
+consul_data_dir: /mnt/consul
+consul_domain: trustedanalytics
+cosnul_options:
+  - "-data-dir={{ consul_data_dir }}"
+  - "-dc={{ stack_name }}"
+  - "-domain={{ consul_domain }}"
+consul_basic_config:
+  ports:
+    dns: 53
+  recursors: "{{ ansible_local['resolver']['nameservers'] | difference(['127.0.0.1']) }}"
 
-bosh_init_version: 0.0.80
+rvm1_rubies:
+  - ruby-2.2.3
+bosh_init_version: 0.0.81
 bosh_cli_version: 1.3130.0
+bosh_gateway: "{{ bosh_range | nthhost(1) }}"
+bosh_dns:
+  - "{{ vpc_cidr_block | nthhost(2) }}"
+bosh_private_ip: "{{ bosh_range | nthhost(4) }}"
+bosh_region: "{{ region }}"
+bosh_ntp: "{{ ntp_server }}"
+bosh_default_key_name: "{{ stack_name }}"
+
 cf_cli_version: 6.13.0
 uaac_version: 3.1.4
 
