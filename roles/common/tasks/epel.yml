@@ -16,7 +16,7 @@
 ---
 
 # https://fedoraproject.org/wiki/EPEL#How_can_I_use_these_extra_packages.3F
-- yum: name={{ epel_release }} state=present
+- yum: name={{ common_epel_release }} state=present
   become: yes
   notify:
     - Enable the 'optional' repository

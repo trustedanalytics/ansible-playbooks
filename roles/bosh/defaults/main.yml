@@ -15,17 +15,35 @@
 
 ---
 
-bosh_deployment_directory: "{{ ansible_env['HOME'] }}/my-bosh"
-bosh_availability_zone: null
-bosh_subnet_id: null
+bosh_deployment_directory: "{{ ansible_env['HOME'] }}/{{ bosh_director_name }}"
+
+# BOSH
+bosh_release_version: 223
+bosh_release_url: https://bosh.io/d/github.com/cloudfoundry/bosh?v={{ bosh_release_version }}
+bosh_release_sha1: 4fdb241703160f5fc426ee6f2e16a9d125073460
+
+# BOSH AWS CPI Release
+bosh_aws_cpi_release_version: 36
+bosh_aws_cpi_release_url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-aws-cpi-release?v={{ bosh_aws_cpi_release_version }}
+bosh_aws_cpi_release_sha1: db2a6c6cdd5ff9f77bf083e10118fa72e1f5e181
+
+bosh_stemcell_version: 3012
+bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
+bosh_stemcell_sha1: 3380b55948abe4c437dee97f67d2d8df4eec3fc1
+
+bosh_instance_type: m3.xlarge
+bosh_ephemeral_disk_size: 25_000
+bosh_disk_size: 20_000
+
 bosh_elastic_ip: null
+bosh_subnet_id: null
+bosh_availability_zone: null
 bosh_access_key_id: null
 bosh_secret_access_key: null
-bosh_range: 10.0.0.0/24
-bosh_gateway: 10.0.0.1
+
 bosh_dns:
   - 10.0.0.2
-bosh_private_ip: 10.0.0.6
+
 bosh_nats_password: nats-password
 bosh_redis_password: redis-password
 bosh_postgres_password: postgres-password
@@ -44,5 +62,6 @@ bosh_mbus_password: mbus-password
 bosh_iam_instance_profile: null
 bosh_default_key_name: bosh
 bosh_private_key: "{{ bosh_deployment_directory }}/{{ bosh_default_key_name }}.yml"
+bosh_director_name: my-bosh
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

@@ -18,4 +18,7 @@
 - name: Deploy
   shell: bosh-init deploy ./bosh.yml chdir={{ bosh_deployment_directory }}
 
+- name: Login into the Director
+  shell: bosh --no-color -n login admin {{ bosh_admin_password }}
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

@@ -1,0 +1,78 @@
+# Copyright (c) 2015 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+---
+
+- command: openssl genrsa -out cf.key 1024
+  args:
+    chdir: "{{ ansible_env['HOME'] }}"
+    creates: cf.key
+
+- command: openssl req -new -key cf.key -out cf.csr -subj '/C=US/ST=California/L=Santa Clara/O=Intel Corporation/CN=.{{ cf_system_domain }}/'
+  args:
+    chdir: "{{ ansible_env['HOME'] }}"
+    creates: cf.csr
+
+- command: openssl x509 -req -in cf.csr -signkey cf.key -out cf.crt
+  args:
+    chdir: "{{ ansible_env['HOME'] }}"
+    creates: cf.crt
+
+- shell: cat cf.crt && cat cf.key
+  args:
+    chdir: "{{ ansible_env['HOME'] }}"
+  register: shell_result
+
+- set_fact: cf_ssl_cert_and_key={{ shell_result.stdout }}
+
+- shell: bosh --no-color -n upload release {{ item }}
+  register: shell_result
+  changed_when: shell_result.stdout | search('Release uploaded')
+  failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Release `.*\' already exists')
+  with_items:
+    - https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
+    - https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
+
+- shell: bosh --no-color -n upload stemcell https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
+  register: shell_result
+  changed_when: shell_result.stdout | search('Stemcell uploaded and created.')
+  failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Stemcell `.*\' already exists')
+
+- template: src={{ item }}.yml.j2 dest={{ ansible_env['HOME'] }}/{{ item }}.yml
+            validate='python -c "import yaml; yaml.load(file('%s', 'r'))"'
+  register: template_result
+  with_items:
+    - cf
+    - docker-broker
+
+- shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
+  when: template_result.changed
+  notify:
+   - Deploy
+  with_items:
+    - cf
+
+- meta: flush_handlers
+
+- shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
+  when: template_result.changed
+  notify:
+   - Deploy
+  with_items:
+    - docker-broker
+
+- meta: flush_handlers
+
+# vi:et:sw=2 ts=2 sts=2 ft=ansible

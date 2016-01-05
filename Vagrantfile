@@ -16,15 +16,14 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
 
+  config.ssh.pty = true
+
   config.vm.provision "shell", inline: <<-SHELL
     set -e
 
-    export DEBIAN_FRONTEND=noninteractive
-
-    apt-get -y install software-properties-common
-    apt-add-repository -y ppa:ansible/ansible 2>/dev/null
-    apt-get -y update
-    apt-get -y install ansible
+    curl -Os https://bootstrap.pypa.io/get-pip.py
+    python get-pip.py
+    pip install http://releases.ansible.com/ansible/ansible-2.0.0-0.7.rc2.tar.gz
   SHELL
 end
 

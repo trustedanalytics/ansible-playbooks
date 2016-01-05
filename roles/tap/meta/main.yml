@@ -15,12 +15,8 @@
 
 ---
 
-- apt: name=python-pip state=present
-  become: yes
-  when: ansible_os_family == 'Debian'
-
-- yum: name=python-pip state=present
-  become: yes
-  when: ansible_os_family == 'RedHat'
+dependencies:
+  - { role: cf-cli }
+  - { role: uaac }
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

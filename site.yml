@@ -16,6 +16,13 @@
 ---
 
 - hosts: all
+  tasks:
+    - set_fact:
+        stack: "{{ lookup('ini', 'stack section=main file=/etc/cfn/cfn-hup.conf') }}"
+        region: "{{ lookup('ini', 'region section=main file=/etc/cfn/cfn-hup.conf') }}"
+    - ec2_facts:
+
+- hosts: all
   roles:
     - common
 

@@ -3,37 +3,43 @@ name: bosh
 
 releases:
 - name: bosh
-  url: https://bosh.io/d/github.com/cloudfoundry/bosh?v=223
-  sha1: 4fdb241703160f5fc426ee6f2e16a9d125073460
+  url: {{ bosh_release_url }}
+{% if bosh_release_sha1 is not none %}
+  sha1: {{ bosh_release_sha1 }}
+{% endif %}
 - name: bosh-aws-cpi
-  url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-aws-cpi-release?v=36
-  sha1: db2a6c6cdd5ff9f77bf083e10118fa72e1f5e181
+  url: {{ bosh_aws_cpi_release_url }}
+{% if bosh_aws_cpi_release_sha1 is not none %}
+  sha1: {{ bosh_aws_cpi_release_sha1 }}
+{% endif %}
 
 resource_pools:
 - name: vms
   network: private
   stemcell:
-    url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v=3012
-    sha1: 3380b55948abe4c437dee97f67d2d8df4eec3fc1
+    url: {{ bosh_stemcell_url }}
+{% if bosh_stemcell_sha1 is not none %}
+    sha1: {{ bosh_stemcell_sha1 }}
+{% endif %}
   cloud_properties:
-    instance_type: m3.xlarge
-    ephemeral_disk: {size: 25_000, type: gp2}
-    availability_zone: {{ bosh_availability_zone }} # <--- Replace with Availability Zone
+    instance_type: {{ bosh_instance_type }}
+    ephemeral_disk: {size: {{ bosh_ephemeral_disk_size }}, type: gp2}
+    availability_zone: {{ bosh_subnet.availability_zone }} # <--- Replace with Availability Zone
 {% if bosh_iam_instance_profile is not none %}
     iam_instance_profile: {{ bosh_iam_instance_profile }}
 {% endif %}
 
 disk_pools:
 - name: disks
-  disk_size: 20_000
+  disk_size: {{ bosh_disk_size }}
   cloud_properties: {type: gp2}
 
 networks:
 - name: private
   type: manual
   subnets:
-  - range: {{ bosh_range }}
-    gateway: {{ bosh_gateway }}
+  - range: {{ bosh_subnet.cidr_block }}
+    gateway: {{ bosh_subnet.cidr_block | nthhost(1) }}
     dns: [{{ bosh_dns | join(', ') }}]
     cloud_properties: {subnet: {{ bosh_subnet_id }}} # <--- Replace with Subnet ID
 {% if bosh_elastic_ip is not none %}
@@ -60,7 +66,7 @@ jobs:
 
   networks:
   - name: private
-    static_ips: [{{ bosh_private_ip }}]
+    static_ips: [{{ bosh_subnet.cidr_block | nthhost(4) }}]
     default: [dns, gateway]
 {% if bosh_elastic_ip is not none %}
   - name: public
@@ -87,8 +93,8 @@ jobs:
       adapter: postgres
 
     registry:
-      address: {{ bosh_private_ip }}
-      host: {{ bosh_private_ip }}
+      address: {{ bosh_subnet.cidr_block | nthhost(4) }}
+      host: {{ bosh_subnet.cidr_block | nthhost(4) }}
       db: *db
       http: {user: admin, password: {{ bosh_registry_password }}, port: 25777}
       username: admin
@@ -96,7 +102,7 @@ jobs:
       port: 25777
 
     blobstore:
-      address: {{ bosh_private_ip }}
+      address: {{ bosh_subnet.cidr_block | nthhost(4) }}
       port: 25250
       provider: dav
       director: {user: director, password: {{ bosh_director_password }}}
@@ -104,7 +110,7 @@ jobs:
 
     director:
       address: 127.0.0.1
-      name: my-bosh
+      name: {{ bosh_director_name }}
       db: *db
       cpi_job: aws_cpi
       max_threads: 10
@@ -130,7 +136,7 @@ jobs:
       default_security_groups: [{{ bosh_default_security_groups | join(', ') }}]
       region: {{ bosh_region }}
 
-    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_private_ip }}:4222"}
+    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_subnet.cidr_block | nthhost(4) }}:4222"}
 
     ntp: &ntp [{{ bosh_ntp | join(', ') }}]
 
@@ -138,12 +144,12 @@ cloud_provider:
   template: {name: aws_cpi, release: bosh-aws-cpi}
 
   ssh_tunnel:
-    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_private_ip }} # <--- Replace with your Elastic IP address
+    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_subnet.cidr_block | nthhost(4) }} # <--- Replace with your Elastic IP address
     port: 22
     user: vcap
     private_key: {{ bosh_private_key }} # Path relative to this manifest file
 
-  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_private_ip }}:6868" # <--- Replace with Elastic IP
+  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_subnet.cidr_block | nthhost(4) }}:6868" # <--- Replace with Elastic IP
 
   properties:
     aws: *aws

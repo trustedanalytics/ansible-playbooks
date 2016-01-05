@@ -15,12 +15,7 @@
 
 ---
 
-- apt: name=unzip state=present
-  become: yes
-  when: ansible_os_family == 'Debian'
-
-- yum: name=unzip state=present
-  become: yes
-  when: ansible_os_family == 'RedHat'
+- name: Deploy
+  shell: bosh --no-color -n deploy
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

@@ -25,4 +25,27 @@
 
 - meta: flush_handlers
 
+- set_fact: bosh_director_ip={{ bosh_subnet.cidr_block | nthhost(4) }}
+
+- name: Display the currently targeted Director
+  shell: bosh --no-color -n target
+  register: shell_result
+  changed_when: False
+  failed_when: shell_result.rc != 0 and
+               not shell_result.stderr | search("Target not set")
+
+- name: Connect to the Director
+  shell: bosh --no-color -n target {{ bosh_director_ip }}
+  changed_when: not shell_result.stdout | search(bosh_director_ip)
+  notify:
+    - Login into the Director
+
+- meta: flush_handlers
+
+- shell: bosh --no-color -n status --uuid
+  changed_when: False
+  register: shell_result
+
+- set_fact: bosh_director_uuid={{ shell_result.stdout }}
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

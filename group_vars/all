@@ -15,30 +15,46 @@
 
 ---
 
-consul_config_dir: /etc/consul.d
-consul_data_dir: /mnt/consul
-consul_domain: trustedanalytics
-consul_options:
-  - "-data-dir={{ consul_data_dir }}"
-  - "-dc={{ stack_name }}"
-  - "-domain={{ consul_domain }}"
-consul_basic_config:
-  ports:
-    dns: 53
-
+# RVM
 rvm1_rubies:
-  - ruby-2.2.3
-bosh_init_version: 0.0.81
-bosh_cli_version: 1.3130.0
-bosh_gateway: "{{ bosh_range | nthhost(1) }}"
-bosh_dns:
-  - "{{ vpc_cidr_block | nthhost(2) }}"
-bosh_private_ip: "{{ bosh_range | nthhost(4) }}"
-bosh_region: "{{ region }}"
-bosh_ntp: "{{ ntp_server }}"
-bosh_default_key_name: "{{ stack_name }}"
+  - ruby-2.2.4
 
+rvm1_install_path: /usr/local/rvm
+
+# bosh-init
+bosh_init_version: 0.0.81
+
+# BOSH CLI
+bosh_cli_version: 1.3169.0
+
+# BOSH
+bosh_release_version: 245
+bosh_release_sha1: d5a108cf32c64a4d0f69bc2b2d8535ac1203f03c
+bosh_ntp: "{{ ntp_server | default(['0.pool.ntp.org', '1.pool.ntp.org']) }}"
+
+# BOSH AWS CPI Release
+bosh_aws_cpi_release_version: 39
+bosh_aws_cpi_release_sha1: ef97bfaff05989ab006e88d28763feb8fbb32d45
+
+bosh_stemcell_version: 3173
+bosh_stemcell_sha1: cfa12811faf0c9617212c90dd91fc098c229f7ec
+
+# CF CLI
 cf_cli_version: 6.13.0
-uaac_version: 3.1.4
+
+# Cloud Foundry
+cf_release_version: 222
+
+# Docker
+docker_release_version: 23
+
+# UAA CLI
+uaac_version: 3.1.5
+
+# Consul
+consul_version: 0.6.0
+
+# Cloudera Manager API
+cm_api_version: 11.0.0
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
