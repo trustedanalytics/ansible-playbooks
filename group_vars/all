@@ -43,7 +43,7 @@ bosh_stemcell_sha1: cfa12811faf0c9617212c90dd91fc098c229f7ec
 cf_cli_version: 6.13.0
 
 # Cloud Foundry
-cf_release_version: 222
+cf_release_version: 212
 
 # Docker
 docker_release_version: 23
