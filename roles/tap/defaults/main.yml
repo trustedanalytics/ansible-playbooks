@@ -37,7 +37,7 @@ cf_loggregator_endpoint_shared_secret: null
 cf_nats_password: null
 cf_nats_user: nats
 cf_system_domain: "{{ cf_domain }}"
-cf_system_domain_organization: default_organization
+cf_system_domain_organization: trustedanalytics
 cf_admin_secret: null
 cf_cc_client_secret: null
 cf_cc_routing_secret: null

@@ -350,7 +350,7 @@ properties:
   ssl:
     skip_cert_verify: true
   system_domain: {{ cf_system_domain }}
-  system_domain_organization: default_organization
+  system_domain_organization: {{ cf_system_domain_organization }}
   uaa:
     clients:
       cc-service-dashboards:
