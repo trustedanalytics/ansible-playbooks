@@ -68,7 +68,7 @@
     - set_fact:
         bosh_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
   roles:
-    - rvm_io.rvm1-ruby
+    - { role: rvm_io.rvm1-ruby, become: yes }
     - role: bosh
       bosh_director_name: "{{ stack | mandatory }}-bosh"
       bosh_region: "{{ region | mandatory }}"
