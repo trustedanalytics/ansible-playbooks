@@ -366,6 +366,11 @@ properties:
   nfs_server:
     address: {{ cf_private_subnet.cidr_block | nthhost(8) }}
     allow_from_entries: [{{ cf_private_subnet.cidr_block }}]
+  router:
+    status:
+      password: {{ cf_password }}
+      port: 8080
+      user: router
   ssl:
     skip_cert_verify: true
   system_domain: {{ cf_system_domain }}
