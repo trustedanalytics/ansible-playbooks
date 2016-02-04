@@ -265,6 +265,7 @@ properties:
   cc:
     allow_app_ssh_access: false
     billing_event_writing_enabled: false
+    broker_client_timeout_seconds: 900
     bulk_api_password: {{ cf_password }}
     db_encryption_key: {{ cf_password }}
     default_running_security_groups: [public_networks, dns, everything]
