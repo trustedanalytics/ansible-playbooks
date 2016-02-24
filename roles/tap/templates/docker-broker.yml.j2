@@ -41,15 +41,15 @@ resource_pools:
     network: default
     stemcell:
       name: {{ cf_bosh_stemcell_name }}
-      version: latest
+      version: {{ cf_bosh_stemcell_version }}
     cloud_properties:
       instance_type: {{ docker_instance_type }}
 
   - name: errand
     network: default
     stemcell:
-      name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-      version: latest
+      name: {{ cf_bosh_stemcell_name }}
+      version: {{ cf_bosh_stemcell_version }}
     cloud_properties:
       instance_type: m3.medium
 
