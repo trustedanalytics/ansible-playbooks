@@ -31,7 +31,7 @@ bosh_stemcell_version: 3012
 bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
 bosh_stemcell_sha1: 3380b55948abe4c437dee97f67d2d8df4eec3fc1
 
-bosh_instance_type: m3.xlarge
+bosh_instance_type: m3.medium
 bosh_ephemeral_disk_size: 25_000
 bosh_disk_size: 20_000
 
