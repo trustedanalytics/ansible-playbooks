@@ -6,6 +6,7 @@ director_uuid: {{ cf_director_uuid }}
 
 releases:
 - {name: cf, version: latest}
+- {name: uaa-intel, version: latest}
 
 networks:
 - name: cf_private
@@ -195,7 +196,7 @@ jobs:
   instances: 1
   resource_pool: small_z1
   templates:
-  - {name: uaa, release: cf}
+  - {name: uaa-intel, release: uaa-intel}
   - {name: metron_agent, release: cf}
   networks:
   - name: cf_private
@@ -333,7 +334,24 @@ properties:
   loggregator_endpoint:
     shared_secret: {{ cf_password }}
   login:
+    asset_base_url: /resources/trustedanalytics
+    links:
+      home: http://console.{{ cf_system_domain }}
+      passwd: http://login.{{ cf_system_domain }}/forgot_password
+      signup: http://console.{{ cf_system_domain }}/register
     protocol: http
+    smtp:
+      host: 'host'
+      password: 'pass'
+      port: 25
+      senderEmail: 'support@example.com'
+      senderName: 'Trusted Analytics'
+      user: 'user'
+    tiles:
+    - image: /resources/trustedanalytics/images/console.png
+      image-hover: /resources/trustedanalytics/images/console.png
+      login-link: https://console.{{ cf_system_domain }}
+      name: Developer console
   metron_agent:
     zone: z1
     deployment: minimal-aws
