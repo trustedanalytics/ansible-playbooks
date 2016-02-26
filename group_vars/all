@@ -36,8 +36,8 @@ bosh_ntp: "{{ ntp_server | default(['0.pool.ntp.org', '1.pool.ntp.org']) }}"
 bosh_aws_cpi_release_version: 39
 bosh_aws_cpi_release_sha1: ef97bfaff05989ab006e88d28763feb8fbb32d45
 
-bosh_stemcell_version: 3173
-bosh_stemcell_sha1: cfa12811faf0c9617212c90dd91fc098c229f7ec
+bosh_stemcell_version: 3104
+bosh_stemcell_sha1: 624c3ea55cbdb7143ffecf36d7e8c0275926a824
 
 # CF CLI
 cf_cli_version: 6.13.0

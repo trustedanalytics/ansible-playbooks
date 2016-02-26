@@ -44,6 +44,7 @@
   with_items:
     - https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
     - https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
+    - https://repo.gotapaas.eu/files/uaa-intel-4.tgz
 
 - shell: bosh --no-color -n upload stemcell https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
   register: shell_result
