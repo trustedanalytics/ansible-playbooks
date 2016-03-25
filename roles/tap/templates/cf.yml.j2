@@ -141,25 +141,6 @@ jobs:
       address: {{ cf_private_subnet.cidr_block | nthhost(8) }}
       allow_from_entries: [{{ cf_private_subnet.cidr_block }}]
 
-- name: ha_proxy_z1
-  instances: 1
-  resource_pool: small_z1
-  templates:
-  - {name: haproxy, release: cf}
-  - {name: metron_agent, release: cf}
-  networks:
-  - name: elastic
-    static_ips: [{{ cf_elastic_ip }}]
-  - name: cf_public
-    default: [gateway, dns]
-  properties:
-    ha_proxy:
-      ssl_pem: |
-        {{ cf_ssl_cert_and_key | indent(8) }}
-    router:
-      servers:
-        z1: [{{ cf_private_subnet.cidr_block | nthhost(5) }}]
-
 - name: hm9000_z1
   instances: 1
   resource_pool: small_z1

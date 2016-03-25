@@ -15,28 +15,6 @@
 
 ---
 
-- command: openssl genrsa -out cf.key 1024
-  args:
-    chdir: "{{ ansible_env['HOME'] }}"
-    creates: cf.key
-
-- command: openssl req -new -key cf.key -out cf.csr -subj '/C=US/ST=California/L=Santa Clara/O=Intel Corporation/CN=.{{ cf_system_domain }}/'
-  args:
-    chdir: "{{ ansible_env['HOME'] }}"
-    creates: cf.csr
-
-- command: openssl x509 -req -in cf.csr -signkey cf.key -out cf.crt
-  args:
-    chdir: "{{ ansible_env['HOME'] }}"
-    creates: cf.crt
-
-- shell: cat cf.crt && cat cf.key
-  args:
-    chdir: "{{ ansible_env['HOME'] }}"
-  register: shell_result
-
-- set_fact: cf_ssl_cert_and_key={{ shell_result.stdout }}
-
 - shell: bosh --no-color -n upload release {{ item }}
   register: shell_result
   changed_when: shell_result.stdout | search('Release uploaded')
