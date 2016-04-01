@@ -1,3 +1,9 @@
 [submodule "roles/rvm_io.rvm1-ruby"]
 	path = roles/rvm_io.rvm1-ruby
 	url = https://github.com/rvm/rvm1-ansible.git
+[submodule "roles/jdauphant.nginx"]
+	path = roles/jdauphant.nginx
+	url = https://github.com/jdauphant/ansible-role-nginx.git
+[submodule "roles/jdauphant.ssl-certs"]
+	path = roles/jdauphant.ssl-certs
+	url = https://github.com/jdauphant/ansible-role-ssl-certs.git
