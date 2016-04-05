@@ -66,9 +66,9 @@ cf_bosh_stemcell_name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 cf_bosh_stemcell_version: null
 cf_az: null
 cf_password: null
-cf_runner_z1_instances: 1
+cf_runner_z1_instances: 2
 cf_ssl_cert_and_key: null
-cf_runner_z1_instance_type: c3.large
+cf_runner_z1_instance_type: m3.xlarge
 cf_release_version: 222
 
 docker_subnet_id: null
