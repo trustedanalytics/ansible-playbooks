@@ -323,12 +323,12 @@ properties:
       signup: http://console.{{ cf_system_domain }}/register
     protocol: http
     smtp:
-      host: 'host'
-      password: 'pass'
-      port: 25
-      senderEmail: 'support@example.com'
-      senderName: 'Trusted Analytics'
-      user: 'user'
+      host: {{ cf_smtp_host }}
+      user: {{ cf_smtp_sender_user }}
+      password: {{ cf_smtp_password }}
+      port: {{ cf_smtp_port }}
+      senderEmail: {{ cf_smtp_sender_email }}
+      senderName: {{ cf_smtp_sender_name }}
     tiles:
     - image: /resources/trustedanalytics/images/console.png
       image-hover: /resources/trustedanalytics/images/console.png

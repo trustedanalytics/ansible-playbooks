@@ -18,4 +18,6 @@
 - name: Deploy
   shell: bosh --no-color -n deploy
 
+- include: add_uaa_clients.yml
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
