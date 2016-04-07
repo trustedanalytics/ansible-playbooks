@@ -40,11 +40,36 @@
   when: template_result.changed
   notify:
     - Deploy
-    - Add uaa clients
   with_items:
     - cf
 
 - meta: flush_handlers
+
+- shell: "{{ item }}"
+  failed_when: shell_result.rc != 0 and not shell_result.stdout | search('(already exists)|(no new users given)')
+  with_items:
+    - uaac target https://uaa.{{ cf_system_domain }}/ --skip-ssl-validation
+    - uaac token client get admin -s {{ cf_password }}
+    - uaac group add console.admin
+    - uaac member add console.admin admin
+    - >-
+      uaac client add atk-client
+      --scope cloud_controller.read,cloud_controller.write,cloud_controller_service_permissions.read,openid
+      --authorized_grant_types authorization_code,password,refresh_token
+      --redirect_uri http://atkdash.{{ cf_system_domain }}/managed/auth/cloudfoundry/callback
+      --authorities uaa.none
+      --secret {{ cf_password }}
+    - >-
+      uaac client add tap_console
+      --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,console.admin,doppler.firehose,openid,password.write,scim.read,scim.userids,scim.write
+      --authorized_grant_types authorization_code,client_credentials,refresh_token
+      --redirect_uri http://console.{{ cf_system_domain }}/oauth/callback,https://console.{{ cf_system_domain }}/oauth/callback
+      --authorities scim.read,uaa.admin,cloud_controller.admin,billing.admin,uaa.resource,password.write,scim.write,cloud_controller.write,cloud_controller.read
+      --autoapprove true
+      --access_token_validity 1209600
+      --refresh_token_validity 1209600
+      --secret {{ cf_password }}
+    - uaac client update cf --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,doppler.firehose,openid,password.write,scim.read,scim.write,console.admin
 
 - shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
   when: template_result.changed
