@@ -46,6 +46,7 @@
 - meta: flush_handlers
 
 - shell: "{{ item }}"
+  register: shell_result
   failed_when: shell_result.rc != 0 and not shell_result.stdout | search('(already exists)|(no new users given)')
   with_items:
     - uaac target https://uaa.{{ cf_system_domain }}/ --skip-ssl-validation
@@ -70,6 +71,11 @@
       --refresh_token_validity 1209600
       --secret {{ cf_password }}
     - uaac client update cf --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,doppler.firehose,openid,password.write,scim.read,scim.write,console.admin
+
+#add sanity check
+- shell: "uaac clients"
+  register: shell_result
+  failed_when: shell_result.rc != 0 or not shell_result.stdout | search('tap_console')
 
 - shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
   when: template_result.changed
