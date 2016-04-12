@@ -1,0 +1,5 @@
+docker_ip: "{{ docker_subnet.cidr_block | nthhost(4) }}"
+docker_url: "tcp://{{ docker_ip }}:4243"
+docker_config_file: "{{ lookup('file', 'templates/docker-broker.yml.j2') }}"
+docker_config_yaml: "{{ docker_config_file | from_yaml }}"
+docker_config_services: "{{ docker_config_yaml.properties.broker.services }}"

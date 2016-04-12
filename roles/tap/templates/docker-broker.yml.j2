@@ -1,6 +1,6 @@
 ---
 name: docker-broker
-director_uuid: {{ cf_director_uuid }}
+director_uuid: "{{ cf_director_uuid }}"
 
 releases:
  - name: docker
@@ -24,31 +24,31 @@ networks:
   - name: default
     type: manual
     subnets:
-      - range: {{ docker_subnet.cidr_block }}
-        gateway: {{ docker_subnet.cidr_block | nthhost(1) }}
-        dns: [{{ cf_dns | join(', ') }}]
+      - range: "{{ docker_subnet.cidr_block }}"
+        gateway: "{{ docker_subnet.cidr_block | nthhost(1) }}"
+        dns: ["{{ cf_dns | join(', ') }}"]
         reserved: ["{{ docker_subnet.cidr_block | nthhost(2) }} - {{ docker_subnet.cidr_block | nthhost(3) }}"]
         static: ["{{ docker_subnet.cidr_block | nthhost(4) }}"]
         cloud_properties:
-          subnet: {{ docker_subnet_id }}
+          subnet: "{{ docker_subnet_id }}"
           security_groups:
-            - {{ cf_bosh_security_group }}
-            - {{ docker_broker_security_group }}
+            - "{{ cf_bosh_security_group }}"
+            - "{{ docker_broker_security_group }}"
 
 resource_pools:
   - name: default
     network: default
     stemcell:
-      name: {{ cf_bosh_stemcell_name }}
-      version: {{ cf_bosh_stemcell_version }}
+      name: "{{ cf_bosh_stemcell_name }}"
+      version: "{{ cf_bosh_stemcell_version }}"
     cloud_properties:
-      instance_type: {{ docker_instance_type }}
+      instance_type: "{{ docker_instance_type }}"
 
   - name: errand
     network: default
     stemcell:
-      name: {{ cf_bosh_stemcell_name }}
-      version: {{ cf_bosh_stemcell_version }}
+      name: "{{ cf_bosh_stemcell_name }}"
+      version: "{{ cf_bosh_stemcell_version }}"
     cloud_properties:
       instance_type: m3.medium
 
@@ -64,7 +64,7 @@ jobs:
       - name: default
         default: [dns, gateway]
         static_ips:
-          - {{ docker_subnet.cidr_block | nthhost(4) }}
+          - "{{ docker_subnet.cidr_block | nthhost(4) }}"
 
   - name: fetch-containers-images
     template: fetch-containers-images
@@ -95,10 +95,10 @@ jobs:
 properties:
   nats:
     user: nats
-    password: {{ cf_password }}
+    password: "{{ cf_password }}"
     port: 4222
     machines:
-      - {{ cf_private_subnet.cidr_block | nthhost(6) }}
+      - "{{ cf_private_subnet.cidr_block | nthhost(6) }}"
 
   cf:
     api_url: "http://api.{{ cf_system_domain }}"
@@ -111,10 +111,11 @@ properties:
       nofile: 65536
 
   fetch_containers_images:
-    docker_url: tcp://{{ docker_subnet.cidr_block | nthhost(4) }}:4243
+    docker_url: "tcp://{{ docker_subnet.cidr_block | nthhost(4) }}:4243"
 
   broker:
     name: cf-containers-broker
+    fetch_images: false
     protocol: http
     host: "cf-containers-broker.{{ cf_system_domain }}"
     port: 80
