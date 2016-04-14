@@ -118,6 +118,13 @@
       register: ec2_vpc_subnet_facts_result
     - set_fact:
         docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
+    - ec2_vpc_route_table_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          association.subnet-id: "{{ docker_subnet_id | mandatory }}"
+      register: ec2_vpc_route_table_facts_result
+    - set_fact:
+        private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
   roles:
     - role: tap
       cf_director_uuid: "{{ bosh_director_uuid }}"

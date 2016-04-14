@@ -86,6 +86,26 @@
 
 - meta: flush_handlers
 
+#get docker instance id and add route
+- apt: name=awscli state=present
+  when: ansible_os_family == "Debian"
+  become: yes
+
+- shell: bosh instances --detail | sed -nr 's/.*broker.* (i-[a-zA-Z0-9]+) .*$/\1/p'
+  register: shell_result
+- set_fact:
+    docker_instance_id: "{{ shell_result.stdout }}"
+
+- name: create route
+  shell: "aws ec2 create-route --route-table-id {{ private_route_table.id }} --destination-cidr-block 172.17.0.0/16 --instance-id {{ docker_instance_id }}"
+  environment:
+    AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+
+- name: set source-dest-check
+  shell: 'aws ec2 modify-instance-attribute --instance-id {{ docker_instance_id }} --source-dest-check "{\"Value\": false}"'
+  environment:
+    AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+
 - pip: name=docker-py version=1.1.0
 
 # TODO: Pull all Docker images and disable fetching
