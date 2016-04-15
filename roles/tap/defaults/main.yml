@@ -76,4 +76,7 @@ docker_broker_security_group: docker-broker
 docker_release_version: 23
 docker_instance_type: m3.xlarge
 
+quay_io_username: null
+quay_io_password: null
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
