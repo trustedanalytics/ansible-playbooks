@@ -128,7 +128,6 @@
     registry: quay.io
     username: "{{ quay_io_username }}"
     password: "{{ quay_io_password }}"
-  when: (quay_io_username is defined and quay_io_username != '') or
-        (quay_io_password is defined and quay_io_password != '')
+  when: quay_io_username and quay_io_password
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
