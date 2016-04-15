@@ -111,11 +111,11 @@ properties:
       nofile: 65536
 
   fetch_containers_images:
-    docker_url: "tcp://{{ docker_subnet.cidr_block | nthhost(4) }}:4243"
+    docker_url: tcp://{{ docker_subnet.cidr_block | nthhost(4) }}:4243
 
   broker:
     name: cf-containers-broker
-    fetch_images: false
+    fetch_images: true
     protocol: http
     host: "cf-containers-broker.{{ cf_system_domain }}"
     port: 80
