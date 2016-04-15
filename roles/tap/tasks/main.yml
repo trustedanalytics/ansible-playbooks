@@ -82,7 +82,9 @@
 
 - pip: name=docker-py version=1.1.0
 
-# add pulling docker images here when this bug will be resolved: https://github.com/ansible/ansible-modules-core/issues/2991
+# TODO: Pull all Docker images and disable fetching
+# in Containers Service Broker.
+# SEE: https://github.com/ansible/ansible-modules-core/issues/2991
 
 - docker:
     name: registrator
