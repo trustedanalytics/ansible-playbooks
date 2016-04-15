@@ -82,12 +82,7 @@
 
 - pip: name=docker-py version=1.1.0
 
-- docker:
-    image: "{{ item.1.container.image }}:{{ item.1.container.tag }}"
-    docker_url: "{{ docker_url }}"
-  with_subelements:
-    - "{{ docker_broker_services }}"
-    - plans
+# add pulling docker images here when this bug will be resolved: https://github.com/ansible/ansible-modules-core/issues/2991
 
 - docker:
     name: registrator
