@@ -364,6 +364,9 @@ properties:
         scope: openid,cloud_controller_service_permissions.read
         secret: {{ cf_password }}
       cloud_controller_username_lookup:
+        authorities: scim.userids
+        authorized-grant-types: client_credentials
+        id: cloud_controller_username_lookup
         secret: {{ cf_password }}
       gorouter:
         authorities: clients.read,clients.write,clients.admin,routing.routes.write,routing.routes.read
