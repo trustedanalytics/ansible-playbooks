@@ -87,9 +87,7 @@
 - meta: flush_handlers
 
 #get docker instance id and add route
-- apt: name=awscli state=present
-  when: ansible_os_family == "Debian"
-  become: yes
+- pip: name=awscli version=1.10.22
 
 - shell: bosh instances --detail | sed -nr 's/.*broker.* (i-[a-zA-Z0-9]+) .*$/\1/p'
   register: shell_result
