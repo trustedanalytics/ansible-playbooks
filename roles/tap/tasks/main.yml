@@ -124,7 +124,7 @@
 - docker:
     name: registry
     image: registry:2.4.0
-    memory_limit: 256MB
+    memory_limit: 1GB
     ports:
     - 5000:5000
     env:

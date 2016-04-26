@@ -23,6 +23,21 @@
 
 - name: Install & configure nginx on the LB
   hosts: nginx
+  pre_tasks:
+    - ec2_vpc_subnet_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          subnet-id: "{{ cf_private_subnet_id | mandatory }}"
+      register: ec2_vpc_subnet_facts_result
+    - set_fact:
+        cf_private_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
+    - ec2_vpc_subnet_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          subnet-id: "{{ docker_subnet_id | mandatory }}"
+      register: ec2_vpc_subnet_facts_result
+    - set_fact:
+        docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
   vars:
     ssl_certs_common_name: "{{ cf_system_domain }}"
   roles:
@@ -139,8 +154,8 @@
              }
       nginx_configs:
         upstream:
-          - upstream api { server 10.0.2.5:80; }
-          - upstream docker_registry { server 10.0.4.4:5000; }
+          - "upstream api { server {{ cf_private_subnet.cidr_block | nthhost(5) }}:80; }"
+          - "upstream docker_registry { server {{ docker_subnet.cidr_block | nthhost(4) }}:5000; }"
         proxy:
           - proxy_set_header Host $host
           - proxy_set_header X-Forwarded-For $remote_addr
