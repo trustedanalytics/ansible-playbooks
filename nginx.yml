@@ -15,6 +15,12 @@
 
 ---
 
+- name: Generate admin credentials for registry
+  hosts: nginx
+  tasks:
+    - apt: name=python-passlib state=present
+    - htpasswd: path=/etc/nginx/auth_basic/docker_registry name=admin password="{{ docker_registry_password }}"
+
 - name: Install & configure nginx on the LB
   hosts: nginx
   vars:
@@ -57,6 +63,23 @@
              location / {
                proxy_pass http://api;
              }
+        http-registry:
+           - listen 80
+           - listen 443 ssl
+           - server_name docker-registry.{{ cf_system_domain }}
+           - >-
+             if ($http_user_agent ~ "^(docker\/1\.(3|4|5(?!\.[0-9]-dev))|Go ).*\$" ) {
+               return 404;
+             }
+           - >-
+             location / {
+               proxy_pass http://docker_registry;
+             }
+           - satisfy any
+           - deny all
+           - auth_basic "closed site"
+           - auth_basic_user_file auth_basic/docker_registry
+           - add_header 'Docker-Distribution-Api-Version' 'registry/2.0' always
         http-cfapi:
            - listen 80
            - listen 443 ssl
@@ -117,6 +140,7 @@
       nginx_configs:
         upstream:
           - upstream api { server 10.0.2.5:80; }
+          - upstream docker_registry { server 10.0.4.4:5000; }
         proxy:
           - proxy_set_header Host $host
           - proxy_set_header X-Forwarded-For $remote_addr

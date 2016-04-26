@@ -106,6 +106,8 @@ properties:
     admin_password: 'admin'
 
   docker:
+    insecure_registries:
+      - "docker-registry.{{ cf_system_domain }}"
     tcp_address: 0.0.0.0
     ulimit:
       nofile: 65536
