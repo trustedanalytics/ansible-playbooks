@@ -72,8 +72,7 @@
       --secret {{ cf_password }}
     - uaac client update cf --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,doppler.firehose,openid,password.write,scim.read,scim.write,console.admin
 
-#add sanity check
-- shell: "uaac clients"
+- shell: uaac clients
   register: shell_result
   failed_when: shell_result.rc != 0 or not shell_result.stdout | search('tap_console')
 
@@ -86,11 +85,11 @@
 
 - meta: flush_handlers
 
-#get docker instance id and add route
 - pip: name=awscli version=1.10.22
 
 - shell: bosh instances --detail | sed -nr 's/.*broker.* (i-[a-zA-Z0-9]+) .*$/\1/p'
   register: shell_result
+
 - set_fact:
     docker_instance_id: "{{ shell_result.stdout }}"
 
@@ -116,7 +115,7 @@
     memory_limit: 256MB
     command: -resync 3600 -ip {{ docker_ip }} consul://cdh-master-0.node.consul:8080
     volumes:
-    - /var/vcap/data/sys/run/docker:/tmp/docker
+      - /var/vcap/data/sys/run/docker:/tmp/docker
     env:
       DOCKER_HOST: unix:///tmp/docker/docker.sock
     docker_url: "{{ docker_url }}"
@@ -139,17 +138,17 @@
     image: quay.io/trustedanalytics/h2o-provisioner
     memory_limit: 1GB
     ports:
-    - 9876:8080
-    - 54310:54310
-    - 54311:54311
-    - 54312:54312
-    - 54313:54313
-    - 54314:54314
-    - 54315:54315
-    - 54316:54316
-    - 54317:54317
-    - 54318:54318
-    - 54319:54319
+      - 9876:8080
+      - 54310:54310
+      - 54311:54311
+      - 54312:54312
+      - 54313:54313
+      - 54314:54314
+      - 54315:54315
+      - 54316:54316
+      - 54317:54317
+      - 54318:54318
+      - 54319:54319
     env:
       DRIVER_PORT_LOWER: 54310
       DRIVER_PORT_HIGHER: 54319

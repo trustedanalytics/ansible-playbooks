@@ -15,14 +15,12 @@
 
 ---
 
-- name: Generate admin credentials for registry
+- name: Install and configure NGINX
   hosts: nginx
-  tasks:
-    - apt: name=python-passlib state=present
-    - htpasswd: path=/etc/nginx/auth_basic/docker_registry name=admin password="{{ docker_registry_password }}"
-
-- name: Install & configure nginx on the LB
-  hosts: nginx
+  vars:
+    auth_basic_user_file: conf/htpasswd
+    docker_registry_user: admin
+    ssl_certs_common_name: "{{ cf_system_domain }}"
   pre_tasks:
     - ec2_vpc_subnet_facts:
         region: "{{ region | mandatory }}"
@@ -38,10 +36,12 @@
       register: ec2_vpc_subnet_facts_result
     - set_fact:
         docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-  vars:
-    ssl_certs_common_name: "{{ cf_system_domain }}"
+    - apt: name=python-passlib state=present
+    - htpasswd: path=/etc/nginx/{{ auth_basic_user_file }}
+                name={{ docker_registry_user }}
+                password={{ docker_registry_password }}
   roles:
-    - role: jdauphant.ssl-certs
+    - jdauphant.ssl-certs
     - role: jdauphant.nginx
       nginx_official_repo: True
       nginx_official_repo_mainline: True
@@ -75,9 +75,9 @@
            - listen 4443 ssl
            - server_name *.{{ cf_system_domain }}
            - >-
-             location / {
-               proxy_pass http://api;
-             }
+               location / {
+                 proxy_pass http://api;
+               }
         http-registry:
            - listen 80
            - listen 443 ssl
@@ -93,69 +93,69 @@
            - satisfy any
            - deny all
            - auth_basic "closed site"
-           - auth_basic_user_file auth_basic/docker_registry
+           - auth_basic_user_file {{ auth_basic_user_file }}
            - add_header 'Docker-Distribution-Api-Version' 'registry/2.0' always
         http-cfapi:
            - listen 80
            - listen 443 ssl
            - server_name cf-api.{{ cf_system_domain }}
            - >-
-             location / {
-               proxy_pass http://api;
-               proxy_set_header Host api.{{ cf_system_domain }};
-             }
+               location / {
+                 proxy_pass http://api;
+                 proxy_set_header Host api.{{ cf_system_domain }};
+               }
         http-cfauth:
            - listen 80
            - listen 443 ssl
            - server_name api.{{ cf_system_domain }}
            - set $myhost api.{{ cf_system_domain }}
            - >-
-             location / {
-               proxy_pass http://api;
-               proxy_set_header Host api.{{ cf_system_domain }};
-             }
+               location / {
+                 proxy_pass http://api;
+                 proxy_set_header Host api.{{ cf_system_domain }};
+               }
            - >-
-             location ~ "/v2/organizations$" {
-               if ($request_method = POST) {
-                 set $myhost auth-proxy.{{ cf_system_domain }};
+               location ~ "/v2/organizations$" {
+                 if ($request_method = POST) {
+                   set $myhost auth-proxy.{{ cf_system_domain }};
+                 }
+                 proxy_pass http://api;
+                 proxy_set_header Host $myhost;
                }
-               proxy_pass http://api;
-               proxy_set_header Host $myhost;
-             }
            - >-
-             location ~ "/v2/organizations/[^/]+$" {
-               if ($request_method = DELETE) {
-                 set $myhost auth-proxy.{{ cf_system_domain }};
+               location ~ "/v2/organizations/[^/]+$" {
+                 if ($request_method = DELETE) {
+                   set $myhost auth-proxy.{{ cf_system_domain }};
+                 }
+                 proxy_pass http://api;
+                 proxy_set_header Host $myhost;
                }
-               proxy_pass http://api;
-               proxy_set_header Host $myhost;
-             }
            - >-
-             location ~ /v2/organizations/.+?/users {
-               if ($request_method = PUT) {
-                 set $myhost auth-proxy.{{ cf_system_domain }};
+               location ~ /v2/organizations/.+?/users {
+                 if ($request_method = PUT) {
+                   set $myhost auth-proxy.{{ cf_system_domain }};
+                 }
+                 if ($request_method = DELETE) {
+                   set $myhost auth-proxy.{{ cf_system_domain }};
+                 }
+                 proxy_pass http://api;
+                 proxy_set_header Host $myhost;
                }
-               if ($request_method = DELETE) {
-                 set $myhost auth-proxy.{{ cf_system_domain }};
-               }
-               proxy_pass http://api;
-               proxy_set_header Host $myhost;
-             }
            - >-
-             location ~ /v2/users/.+?/organizations {
-               if ($request_method = PUT) {
-                 set $myhost auth-proxy.{{ cf_system_domain }};
+               location ~ /v2/users/.+?/organizations {
+                 if ($request_method = PUT) {
+                   set $myhost auth-proxy.{{ cf_system_domain }};
+                 }
+                 if ($request_method = DELETE) {
+                   set $myhost auth-proxy.{{ cf_system_domain }};
+                 }
+                 proxy_set_header Host $myhost;
+                 proxy_pass http://api;
                }
-               if ($request_method = DELETE) {
-                 set $myhost auth-proxy.{{ cf_system_domain }};
-               }
-               proxy_set_header Host $myhost;
-               proxy_pass http://api;
-             }
       nginx_configs:
         upstream:
-          - "upstream api { server {{ cf_private_subnet.cidr_block | nthhost(5) }}:80; }"
-          - "upstream docker_registry { server {{ docker_subnet.cidr_block | nthhost(4) }}:5000; }"
+          - upstream api { server {{ cf_private_subnet.cidr_block | nthhost(5) }}:80; }
+          - upstream docker_registry { server {{ docker_subnet.cidr_block | nthhost(4) }}:5000; }
         proxy:
           - proxy_set_header Host $host
           - proxy_set_header X-Forwarded-For $remote_addr
@@ -163,8 +163,9 @@
           - proxy_set_header Upgrade $http_upgrade
           - proxy_set_header Connection "upgrade"
           - proxy_set_header X-Forwarded-Proto $scheme
+  post_tasks:
+    - name: Singnal the NGINX wait condition handle
+      command: cfn-signal -s true -r 'NGINX installed and configured.' {{ nginx_wait_condition_handle }}
+      when: nginx_wait_condition_handle
 
-- name: Singnal the wait condition handle
-  hosts: nginx
-  tasks:
-    - command: cfn-signal -s true -r 'Nginx configuration completed' {{ nginx_wait_condition_handle }}
+# vi:et:sw=2 ts=2 sts=2 ft=ansible

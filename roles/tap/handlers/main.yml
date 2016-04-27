@@ -18,4 +18,12 @@
 - name: Deploy
   shell: bosh --no-color -n deploy
 
+- name: Signal the Cloud Foundry wait condition handle
+  command: cfn-signal -s true -r 'Cloud Foundry deployed.' {{ cf_wait_condition_handle }}
+  when: cf_wait_condition_handle
+
+- name: Signal the Docker Broker wait condition handle
+  command: cfn-signal -s true -r 'Docker Broker deployed.' {{ docker_broker_wait_condition_handle }}
+  when: docker_broker_wait_condition_handle
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
