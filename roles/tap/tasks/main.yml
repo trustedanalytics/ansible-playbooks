@@ -122,6 +122,19 @@
     docker_url: "{{ docker_url }}"
 
 - docker:
+    name: registry
+    image: registry:2.4.0
+    memory_limit: 1GB
+    ports:
+    - 5000:5000
+    env:
+      STORAGE_PATH: /registry
+      SETTINGS_FLAVOR: local
+    volumes:
+    - /var/vcap/data/registry:/registry
+    docker_url: "{{ docker_url }}"
+
+- docker:
     name: h2oprovisioner
     image: quay.io/trustedanalytics/h2o-provisioner
     memory_limit: 1GB
