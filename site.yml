@@ -34,22 +34,28 @@
       - lineinfile: 
           dest=/etc/profile.d/proxy.sh 
           regexp='^export no_proxy=' 
-          line='export no_proxy=".consul,.xip.io,.nip.io,.xip.gotapaas.eu,{{ horizon_ip }}","{{ ansible_eth0.ipv4.address }}",127.0.0.1,10.0.1.4'
+          line='export no_proxy=.consul,.xip.io,.nip.io,.xip.gotapaas.eu,{{ ansible_eth0.ipv4.address }},{{ no_proxy }}'
         when: http_proxy is defined or https_proxy is defined or ftp_proxy
+      - set_fact:
+          no_proxy: ".consul,.xip.io,.nip.io,.xip.gotapaas.eu,{{ ansible_eth0.ipv4.address }},{{ no_proxy }}"
       - os_server_facts:
           cloud: TAP
+        environment:
+          no_proxy: "{{ no_proxy }}"
+          http_proxy: "{{ http_proxy }}"
+          https_proxy: "{{ https_proxy }}"
       when: provider == 'openstack'
-
 
 - hosts: all
   roles:
     - common
-  environment: "{{ proxy_env }}"
+  environment:
+    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
 
 - include: jump-boxes.yml
-#  environment: "{{ proxy_env }}"
-#
+
 #- include: nginx.yml
-#   environment: "{{ proxy_env }}"
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

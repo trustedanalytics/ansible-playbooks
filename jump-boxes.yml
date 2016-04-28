@@ -41,11 +41,11 @@
       when: provider == 'aws'
 
     - block:
-      - name:  Set the key pair used by BOSH on OpenStack
-        os_keypair:
-          cloud: TAP
-          name: "{{ key_name | mandatory }}"
-        register: os_keypair
+#      - name:  Set the key pair used by BOSH on OpenStack
+#        os_keypair:
+#          cloud: TAP
+#          name: "{{ key_name | mandatory }}"
+#        register: os_keypair
       - name: Set the key pair used by BOSH on OpenStack
         set_fact: bosh_default_key_name={{ key_name | mandatory }}
                   bosh_private_key="../.ssh/id_rsa"
@@ -112,6 +112,10 @@
       bosh_region: "{{ region | mandatory }}"
   environment:
     PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
+    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    ftp_proxy: "{{ ftp_proxy }}"
 ###
 ###- name: Deploy Trusted Analytics Platform
 ###  hosts: jump-boxes
@@ -171,5 +175,9 @@
 ###      cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
 ###  environment:
 ###    PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
+###    no_proxy: "{{ no_proxy }}"
+###    http_proxy: "{{ http_proxy }}"
+###    https_proxy: "{{ https_proxy }}"
+###    ftp_proxy: "{{ ftp_proxy }}"
 ###
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
