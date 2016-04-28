@@ -27,7 +27,6 @@
     - common
 
 - include: jump-boxes.yml
-
 - include: nginx.yml
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

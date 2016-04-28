@@ -74,6 +74,10 @@
       bosh_region: "{{ region | mandatory }}"
   environment:
     PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
+  post_tasks:
+    - name: Signal the BOSH Director wait condition handle
+      command: cfn-signal -s true -r 'BOSH Director deployed.' {{ bosh_director_wait_condition_handle }}
+      when: bosh_director_wait_condition_handle
 
 - name: Deploy Trusted Analytics Platform
   hosts: jump-boxes
@@ -125,12 +129,20 @@
       register: ec2_vpc_route_table_facts_result
     - set_fact:
         private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
+  # TODO: Create generic role for BOSH deployment.
   roles:
     - role: tap
       cf_director_uuid: "{{ bosh_director_uuid }}"
       cf_dns: "{{ bosh_dns }}"
       cf_bosh_security_group: "{{ bosh_default_security_groups | first }}"
       cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
+  post_tasks:
+    - name: Signal the Cloud Foundry wait condition handle
+      command: cfn-signal -s true -r 'Cloud Foundry deployed.' {{ cf_wait_condition_handle }}
+      when: cf_wait_condition_handle
+    - name: Signal the Docker Broker wait condition handle
+      command: cfn-signal -s true -r 'Docker Broker deployed.' {{ docker_broker_wait_condition_handle }}
+      when: docker_broker_wait_condition_handle
   environment:
     PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
 
