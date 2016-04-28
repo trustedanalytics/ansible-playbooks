@@ -7,24 +7,39 @@ releases:
 {% if bosh_release_sha1 is not none %}
   sha1: {{ bosh_release_sha1 }}
 {% endif %}
+{% if (provider == 'aws') %}
 - name: bosh-aws-cpi
   url: {{ bosh_aws_cpi_release_url }}
 {% if bosh_aws_cpi_release_sha1 is not none %}
   sha1: {{ bosh_aws_cpi_release_sha1 }}
+{% endif %}
+{% elif  (provider == 'openstack') %}
+- name: bosh-openstack-cpi
+  url: {{ bosh_openstack_cpi_release_url }}
+{% if bosh_openstack_cpi_release_sha1 is not none %}
+  sha1: {{ bosh_openstack_cpi_release_sha1 }}
+{% endif %}
 {% endif %}
 
 resource_pools:
 - name: vms
   network: private
   stemcell:
-    url: {{ bosh_stemcell_url }}
-{% if bosh_stemcell_sha1 is not none %}
-    sha1: {{ bosh_stemcell_sha1 }}
+{% if (provider == 'aws') %}
+    url: {{ bosh_aws_stemcell_url }}
+{% if bosh_aws_stemcell_sha1 is not none %}
+    sha1: {{ bosh_openstack_stemcell_sha1 }}
+{% endif %}
+{% elif  (provider == 'openstack') %}
+    url: {{ bosh_openstack_stemcell_url }}
+{% if bosh_openstack_stemcell_sha1 is not none %}
+    sha1: {{ bosh_openstack_stemcell_sha1 }}
+{% endif %}
 {% endif %}
   cloud_properties:
     instance_type: {{ bosh_instance_type }}
     ephemeral_disk: {size: {{ bosh_ephemeral_disk_size }}, type: gp2}
-    availability_zone: {{ bosh_subnet.availability_zone }} # <--- Replace with Availability Zone
+    availability_zone: {{ bosh_availability_zone }} # <--- Replace with Availability Zone
 {% if bosh_iam_instance_profile is not none %}
     iam_instance_profile: {{ bosh_iam_instance_profile }}
 {% endif %}
@@ -32,16 +47,23 @@ resource_pools:
 disk_pools:
 - name: disks
   disk_size: {{ bosh_disk_size }}
+{% if (provider == 'aws') %}
   cloud_properties: {type: gp2}
+{% endif %}
 
 networks:
 - name: private
   type: manual
   subnets:
-  - range: {{ bosh_subnet.cidr_block }}
-    gateway: {{ bosh_subnet.cidr_block | nthhost(1) }}
+  - range: {{ bosh_cidr }}
+    gateway: {{ bosh_cidr | nthhost(1) }}
     dns: [{{ bosh_dns | join(', ') }}]
-    cloud_properties: {subnet: {{ bosh_subnet_id }}} # <--- Replace with Subnet ID
+    cloud_properties:
+{% if (provider == 'aws') %}
+      subnet: {{ bosh_subnet_id }} # <--- Replace with Subnet ID
+{% elif  (provider == 'openstack') %}
+      net_id: {{ bosh_subnet_id }} # <--- Replace with private network UUID
+{% endif %}
 {% if bosh_elastic_ip is not none %}
 - name: public
   type: vip
@@ -59,14 +81,18 @@ jobs:
   - {name: director, release: bosh}
   - {name: health_monitor, release: bosh}
   - {name: registry, release: bosh}
+{% if (provider == 'aws') %}
   - {name: aws_cpi, release: bosh-aws-cpi}
+{% elif  (provider == 'openstack') %}
+  - {name: openstack_cpi, release: bosh-openstack-cpi}
+{% endif %}
 
   resource_pool: vms
   persistent_disk_pool: disks
 
   networks:
   - name: private
-    static_ips: [{{ bosh_subnet.cidr_block | nthhost(4) }}]
+    static_ips: [{{ bosh_cidr | nthhost(4) }}]
     default: [dns, gateway]
 {% if bosh_elastic_ip is not none %}
   - name: public
@@ -93,8 +119,8 @@ jobs:
       adapter: postgres
 
     registry:
-      address: {{ bosh_subnet.cidr_block | nthhost(4) }}
-      host: {{ bosh_subnet.cidr_block | nthhost(4) }}
+      address: {{ bosh_cidr | nthhost(4) }}
+      host: {{ bosh_cidr | nthhost(4) }}
       db: *db
       http: {user: admin, password: {{ bosh_registry_password }}, port: 25777}
       username: admin
@@ -102,7 +128,7 @@ jobs:
       port: 25777
 
     blobstore:
-      address: {{ bosh_subnet.cidr_block | nthhost(4) }}
+      address: {{ bosh_cidr | nthhost(4) }}
       port: 25250
       provider: dav
       director: {user: director, password: {{ bosh_director_password }}}
@@ -112,7 +138,11 @@ jobs:
       address: 127.0.0.1
       name: {{ bosh_director_name }}
       db: *db
+{% if (provider == 'aws') %}
       cpi_job: aws_cpi
+{% elif  (provider == 'openstack') %}
+      cpi_job: openstack_cpi
+{% endif %}
       max_threads: 10
       user_management:
         provider: local
@@ -125,6 +155,7 @@ jobs:
       director_account: {user: hm, password: {{ bosh_hm_password }}}
       resurrector_enabled: true
 
+{% if (provider == 'aws') %}
     aws: &aws
 {% if bosh_iam_instance_profile is not none %}
       credentials_source: env_or_profile
@@ -132,27 +163,43 @@ jobs:
       access_key_id: {{ bosh_access_key_id }} # <--- Replace with AWS Access Key ID
       secret_access_key: {{ bosh_secret_access_key }} # <--- Replace with AWS Secret Key
 {% endif %}
+      region: {{ bosh_region }}
+{% elif  (provider == 'openstack') %}
+    openstack: &openstack
+      auth_url: {{ openstack.clouds.TAP.auth.auth_url }} # <--- Replace with OpenStack Identity API endpoint
+      tenant: {{ openstack.clouds.TAP.auth.project_name }} # <--- Replace with OpenStack tenant name
+      username: {{ openstack.clouds.TAP.auth.username }} # <--- Replace with OpenStack username
+      api_key: {{ openstack.clouds.TAP.auth.password }} # <--- Replace with OpenStack password
+      human_readable_vm_names: true
+{% endif %}
       default_key_name: {{ bosh_default_key_name }}
       default_security_groups: [{{ bosh_default_security_groups | join(', ') }}]
-      region: {{ bosh_region }}
 
-    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_subnet.cidr_block | nthhost(4) }}:4222"}
+    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_cidr | nthhost(4) }}:4222"}
 
     ntp: &ntp [{{ bosh_ntp | join(', ') }}]
 
 cloud_provider:
+{% if (provider == 'aws') %}
   template: {name: aws_cpi, release: bosh-aws-cpi}
+{% elif  (provider == 'openstack') %}
+  template: {name: openstack_cpi, release: bosh-openstack-cpi}
+{% endif %}
 
   ssh_tunnel:
-    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_subnet.cidr_block | nthhost(4) }} # <--- Replace with your Elastic IP address
+    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_cidr | nthhost(4) }} # <--- Replace with your Elastic IP address
     port: 22
     user: vcap
     private_key: {{ bosh_private_key }} # Path relative to this manifest file
 
-  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_subnet.cidr_block | nthhost(4) }}:6868" # <--- Replace with Elastic IP
+  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_cidr | nthhost(4) }}:6868" # <--- Replace with Elastic IP
 
   properties:
+{% if (provider == 'aws') %}
     aws: *aws
+{% elif  (provider == 'openstack') %}
+    openstack: *openstack
+{% endif %}
     agent: {mbus: "https://mbus:{{ bosh_mbus_password }}@0.0.0.0:6868"}
     blobstore: {provider: local, path: /var/vcap/micro_bosh/data/cache}
     ntp: *ntp

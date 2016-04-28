@@ -25,7 +25,7 @@
 
 - meta: flush_handlers
 
-- set_fact: bosh_director_ip={{ bosh_subnet.cidr_block | nthhost(4) }}
+- set_fact: bosh_director_ip={{ bosh_cidr | nthhost(4) }}
 
 - name: Display the currently targeted Director
   shell: bosh --no-color -n target
