@@ -28,7 +28,7 @@ resource_pools:
 {% if (provider == 'aws') %}
     url: {{ bosh_aws_stemcell_url }}
 {% if bosh_aws_stemcell_sha1 is not none %}
-    sha1: {{ bosh_openstack_stemcell_sha1 }}
+    sha1: {{ bosh_aws_stemcell_sha1 }}
 {% endif %}
 {% elif  (provider == 'openstack') %}
     url: {{ bosh_openstack_stemcell_url }}
