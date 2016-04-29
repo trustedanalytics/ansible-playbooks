@@ -103,27 +103,59 @@
   environment:
     AWS_DEFAULT_REGION: "{{ region | mandatory }}"
 
-- pip: name=docker-py version=1.1.0
+- pip: name=docker-py version=1.8.1
 
-# TODO: Pull all Docker images and disable fetching
-# in Containers Service Broker.
-# SEE: https://github.com/ansible/ansible-modules-core/issues/2991
+- set_fact:
+    docker_manifest: "{{ lookup('file', 'templates/docker-broker.yml.j2') | from_yaml }}"
+
+- set_fact:
+    docker_plans: "{{ docker_manifest.properties.broker.services }}"
+
+#docker_login doesnt support setting the api version, have to log in using client
+- apt: name=docker.io state=installed
+
+- copy: dest=/etc/profile.d/docker.sh content="export DOCKER_HOST={{ docker_url }}"
+
+- shell: "docker login -u {{ quay_io_username }} -p {{ quay_io_password }} -e test@test quay.io"
+  environment:
+    DOCKER_HOST: "{{ docker_url }}"
+  when: quay_io_username and quay_io_password
+
+#docker_image doesn't work for downloading images only: https://github.com/ansible/ansible-modules-core/issues/2991
+#download non-quay images when no quay username provided
+- shell: "docker pull {{ item.plans[0].container.image }}:{{ item.plans[0].container.tag }}"
+  environment:
+    DOCKER_HOST: "{{ docker_url }}"
+  register: shell_result
+  changed_when: not shell_result.stdout | search("Image is up to date")
+  with_items: "{{ docker_plans }}"
+  when: (not quay_io_username or not quay_io_password) and not "quay" in item.plans[0].container.image
+
+#download all images when quay username provided
+- shell: "docker pull {{ item.plans[0].container.image }}:{{ item.plans[0].container.tag }}"
+  environment:
+    DOCKER_HOST: "{{ docker_url }}"
+  register: shell_result
+  changed_when: not shell_result.stdout | search("Image is up to date")
+  with_items: "{{ docker_plans }}"
+  when: quay_io_username and quay_io_password
 
 - docker:
     name: registrator
     image: gliderlabs/registrator:v6
-    memory_limit: 256MB
+    memory_limit: 256000000
     command: -resync 3600 -ip {{ docker_ip }} consul://cdh-master-0.node.consul:8080
     volumes:
       - /var/vcap/data/sys/run/docker:/tmp/docker
     env:
       DOCKER_HOST: unix:///tmp/docker/docker.sock
+    docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
 
 - docker:
     name: registry
     image: registry:2.4.0
-    memory_limit: 1GB
+    memory_limit: 1024000000
     ports:
     - 5000:5000
     env:
@@ -131,12 +163,13 @@
       SETTINGS_FLAVOR: local
     volumes:
     - /var/vcap/data/registry:/registry
+    docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
 
 - docker:
     name: h2oprovisioner
     image: quay.io/trustedanalytics/h2o-provisioner
-    memory_limit: 1GB
+    memory_limit: 1024000000
     ports:
       - 9876:8080
       - 54310:54310
@@ -157,10 +190,10 @@
       KRB_REALM: CLOUDERA
       KRB_USER: cf
       KRB_PASSWORD: cf1
+    docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
-    registry: quay.io
-    username: "{{ quay_io_username }}"
-    password: "{{ quay_io_password }}"
   when: quay_io_username and quay_io_password
+
+- include: jupyter_build.yml
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
