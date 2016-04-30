@@ -36,24 +36,17 @@
         notify:
           - Signal the key name wait condition handle
       - meta: flush_handlers
-      - name: Set the key pair used by BOSH on AWS
-        set_fact: bosh_default_key_name={{ key_name | mandatory }}
-                  bosh_private_key={{ user_result.ssh_key_file }}
       when: provider == 'aws'
 
     - block:
-#      - name:  Set the key pair used by BOSH on OpenStack
-#        os_keypair:
-#          cloud: TAP
-#          name: "{{ key_name | mandatory }}"
-#        register: os_keypair
-      - name: Set the key pair used by BOSH on OpenStack
-        set_fact: bosh_default_key_name={{ key_name | mandatory }}
-                  bosh_private_key="../.ssh/id_rsa"
       - name: Set OpenStack cedentials
         set_fact:
           openstack: "{{ lookup('file', '/etc/openstack/clouds.yaml') | from_yaml }}"
       when: provider == 'openstack'
+    - name: Set the key pair used by BOSH
+      set_fact: bosh_default_key_name={{ key_name | mandatory }}
+                bosh_private_key={{ user_result.ssh_key_file | default('/root/.ssh/id_rsa') }}
+
 - name: Install BOSH
   hosts: jump-boxes
   pre_tasks:
