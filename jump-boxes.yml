@@ -21,6 +21,7 @@
     - name: Signal the key name wait condition handle
       command: cfn-signal -s true -r 'The public key file imported.' {{ key_name_wait_condition_handle }}
   tasks:
+    - include_vars: "group_vars/{{ provider }}.yml"
     - block:
       - name: Create the RSA Key Pair
         user: name={{ ansible_user_id }} generate_ssh_key=yes

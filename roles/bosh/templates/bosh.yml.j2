@@ -9,32 +9,21 @@ releases:
 {% endif %}
 {% if (provider == 'aws') %}
 - name: bosh-aws-cpi
-  url: {{ bosh_aws_cpi_release_url }}
-{% if bosh_aws_cpi_release_sha1 is not none %}
-  sha1: {{ bosh_aws_cpi_release_sha1 }}
-{% endif %}
 {% elif  (provider == 'openstack') %}
 - name: bosh-openstack-cpi
-  url: {{ bosh_openstack_cpi_release_url }}
-{% if bosh_openstack_cpi_release_sha1 is not none %}
-  sha1: {{ bosh_openstack_cpi_release_sha1 }}
 {% endif %}
+  url: {{ bosh_cpi_release_url }}
+{% if bosh_cpi_release_sha1 is not none %}
+  sha1: {{ bosh_cpi_release_sha1 }}
 {% endif %}
 
 resource_pools:
 - name: vms
   network: private
   stemcell:
-{% if (provider == 'aws') %}
-    url: {{ bosh_aws_stemcell_url }}
-{% if bosh_aws_stemcell_sha1 is not none %}
-    sha1: {{ bosh_aws_stemcell_sha1 }}
-{% endif %}
-{% elif  (provider == 'openstack') %}
-    url: {{ bosh_openstack_stemcell_url }}
-{% if bosh_openstack_stemcell_sha1 is not none %}
-    sha1: {{ bosh_openstack_stemcell_sha1 }}
-{% endif %}
+    url: {{ bosh_stemcell_url }}
+{% if bosh_stemcell_sha1 is not none %}
+    sha1: {{ bosh_stemcell_sha1 }}
 {% endif %}
   cloud_properties:
     instance_type: {{ bosh_instance_type }}

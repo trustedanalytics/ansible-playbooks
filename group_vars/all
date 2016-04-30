@@ -31,22 +31,7 @@ bosh_cli_version: 1.3169.0
 bosh_release_version: 245
 bosh_release_sha1: d5a108cf32c64a4d0f69bc2b2d8535ac1203f03c
 bosh_ntp: "{{ ntp_server | default(['0.pool.ntp.org', '1.pool.ntp.org']) }}"
-
-# BOSH AWS CPI Release
-bosh_aws_cpi_release_version: 39
-bosh_aws_cpi_release_sha1: ef97bfaff05989ab006e88d28763feb8fbb32d45
-
-# BOSH OpenStack CPI Release
-bosh_openstack_cpi_release_version: 24
-bosh_openstack_cpi_release_sha1: 6621ee1326e7136d9dbebacd1158d101618dc719
-
-# BOSH Stemcell
 bosh_stemcell_version: 3104
-bosh_aws_stemcell_sha1: 624c3ea55cbdb7143ffecf36d7e8c0275926a824
-bosh_openstack_stemcell_sha1: 0e0f48f064663b13990c77092e265ae185db1db2
-
-bosh_instance_type: m1.medium
-when: provider == 'openstack'
 
 # CF CLI
 cf_cli_version: 6.13.0
