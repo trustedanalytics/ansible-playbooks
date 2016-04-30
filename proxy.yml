@@ -1,0 +1,30 @@
+---
+# Ugly Betty :(
+- hosts: all
+  tasks:
+    - block:
+      - set_fact:
+          no_proxy: ""
+          http_proxy: ""
+          https_proxy: ""
+          ftp_proxy: ""
+      when: provider == 'aws'
+    - block:
+      - file: path=/etc/profile.d/proxy.sh owner=root group=root mode=0755 state=touch
+      - lineinfile: dest=/etc/profile.d/proxy.sh regexp='^export http_proxy=' line='export http_proxy="{{ http_proxy }}"'
+        when: http_proxy is defined
+      - lineinfile: dest=/etc/profile.d/proxy.sh regexp='^export https_proxy=' line='export https_proxy="{{ https_proxy }}"'
+        when: https_proxy is defined
+      - lineinfile: dest=/etc/profile.d/proxy.sh regexp='^export ftp_proxy=' line='export ftp_proxy="{{ ftp_proxy }}"'
+        when: ftp_proxy is defined
+      - lineinfile:
+          dest=/etc/profile.d/proxy.sh
+          regexp='^export no_proxy='
+          line='export no_proxy=.consul,.xip.io,.nip.io,.xip.gotapaas.eu,{{ ansible_eth0.ipv4.address }},{{ no_proxy }}'
+        when: http_proxy is defined or https_proxy is defined or ftp_proxy
+      - set_fact:
+          no_proxy: ".consul,.xip.io,.nip.io,.xip.gotapaas.eu,{{ ansible_eth0.ipv4.address }},{{ no_proxy }}"
+      - debug: var="{{ no_proxy }}"
+      - debug: var=no_proxy
+      when: provider == 'openstack'
+
