@@ -115,6 +115,9 @@ jobs:
       username: admin
       password: {{ bosh_registry_password }}
       port: 25777
+{% if (provider == 'openstack') %}
+      endpoint: http://admin:{{ bosh_registry_password }}@{{ bosh_cidr | nthhost(4) }}:25777
+{% endif %}
 
     blobstore:
       address: {{ bosh_cidr | nthhost(4) }}
@@ -159,6 +162,7 @@ jobs:
       tenant: {{ openstack.clouds.TAP.auth.project_name }} # <--- Replace with OpenStack tenant name
       username: {{ openstack.clouds.TAP.auth.username }} # <--- Replace with OpenStack username
       api_key: {{ openstack.clouds.TAP.auth.password }} # <--- Replace with OpenStack password
+      human_readable_vm_names: true
 {% endif %}
       default_key_name: {{ bosh_default_key_name }}
       default_security_groups: [{{ bosh_default_security_groups | join(', ') }}]
