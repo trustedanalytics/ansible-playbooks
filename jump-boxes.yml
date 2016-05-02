@@ -43,6 +43,7 @@
         set_fact:
           openstack: "{{ lookup('file', '/etc/openstack/clouds.yaml') | from_yaml }}"
       when: provider == 'openstack'
+
     - name: Set the key pair used by BOSH
       set_fact: bosh_default_key_name={{ key_name | mandatory }}
                 bosh_private_key={{ user_result.ssh_key_file | default('/root/.ssh/id_rsa') }}
@@ -70,7 +71,6 @@
         - bosh_hm_password
         - bosh_mbus_password
     - block:
-      - debug: msg="USTAW bosh_cidr i bosh_availability_zone"
       - ec2_vpc_subnet_facts:
           region: "{{ region | mandatory }}"
           filters:
@@ -79,7 +79,6 @@
       - set_fact:
           bosh_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
           bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
-      - debug: var=bosh_subnet
       when: provider == 'aws'
     - block:
       - os_networks_facts:
@@ -93,12 +92,9 @@
           filters:
             network_id: "{{ bosh_subnet_id | mandatory }}"
         register: os_subnet_facts_result
-      - debug: var=os_network_facts_result
-      - debug: var=os_subnet_facts_result
       - set_fact:
           bosh_cidr: "{{ os_subnet_facts_result.ansible_facts.openstack_subnets[0].cidr }}"
           bosh_availability_zone: "{{ availability_zone }}"
-      - debug: var=bosh_cidr
       when: provider == 'openstack'
   roles:
     - { role: rvm_io.rvm1-ruby, become: yes }
@@ -111,68 +107,68 @@
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     ftp_proxy: "{{ ftp_proxy }}"
-###
-###- name: Deploy Trusted Analytics Platform
-###  hosts: jump-boxes
-###  pre_tasks:
-###    - name: Generate passwords
-###      set_fact:
-###        "{{ item }}": "{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}"
-###      with_items:
-###        - cf_bulk_api_password
-###        - cf_ccdb_encryption_key
-###        - cf_staging_upload_password
-###        - cf_ccdb_user_password
-###        - cf_loggregator_endpoint_shared_secret
-###        - cf_nats_password
-###        - cf_admin_secret
-###        - cf_cc_client_secret
-###        - cf_cc_routing_secret
-###        - cf_cloud_controller_username_lookup_secret
-###        - cf_doppler_secret
-###        - cf_gorouter_secret
-###        - cf_login_client_secret
-###        - cf_notifications_client_secret
-###        - cf_uaadb_user_password
-###    - ec2_vpc_subnet_facts:
-###        region: "{{ region | mandatory }}"
-###        filters:
-###          subnet-id: "{{ cf_private_subnet_id | mandatory }}"
-###      register: ec2_vpc_subnet_facts_result
-###    - set_fact:
-###        cf_private_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-###    - ec2_vpc_subnet_facts:
-###        region: "{{ region | mandatory }}"
-###        filters:
-###          subnet-id: "{{ cf_public_subnet_id | mandatory }}"
-###      register: ec2_vpc_subnet_facts_result
-###    - set_fact:
-###        cf_public_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-###    - ec2_vpc_subnet_facts:
-###        region: "{{ region | mandatory }}"
-###        filters:
-###          subnet-id: "{{ docker_subnet_id | mandatory }}"
-###      register: ec2_vpc_subnet_facts_result
-###    - set_fact:
-###        docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-###    - ec2_vpc_route_table_facts:
-###        region: "{{ region | mandatory }}"
-###        filters:
-###          association.subnet-id: "{{ docker_subnet_id | mandatory }}"
-###      register: ec2_vpc_route_table_facts_result
-###    - set_fact:
-###        private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
-###  roles:
-###    - role: tap
-###      cf_director_uuid: "{{ bosh_director_uuid }}"
-###      cf_dns: "{{ bosh_dns }}"
-###      cf_bosh_security_group: "{{ bosh_default_security_groups | first }}"
-###      cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
-###  environment:
-###    PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
-###    no_proxy: "{{ no_proxy }}"
-###    http_proxy: "{{ http_proxy }}"
-###    https_proxy: "{{ https_proxy }}"
-###    ftp_proxy: "{{ ftp_proxy }}"
-###
+
+- name: Deploy Trusted Analytics Platform
+  hosts: jump-boxes
+  pre_tasks:
+    - name: Generate passwords
+      set_fact:
+        "{{ item }}": "{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}"
+      with_items:
+        - cf_bulk_api_password
+        - cf_ccdb_encryption_key
+        - cf_staging_upload_password
+        - cf_ccdb_user_password
+        - cf_loggregator_endpoint_shared_secret
+        - cf_nats_password
+        - cf_admin_secret
+        - cf_cc_client_secret
+        - cf_cc_routing_secret
+        - cf_cloud_controller_username_lookup_secret
+        - cf_doppler_secret
+        - cf_gorouter_secret
+        - cf_login_client_secret
+        - cf_notifications_client_secret
+        - cf_uaadb_user_password
+    - ec2_vpc_subnet_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          subnet-id: "{{ cf_private_subnet_id | mandatory }}"
+      register: ec2_vpc_subnet_facts_result
+    - set_fact:
+        cf_private_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
+    - ec2_vpc_subnet_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          subnet-id: "{{ cf_public_subnet_id | mandatory }}"
+      register: ec2_vpc_subnet_facts_result
+    - set_fact:
+        cf_public_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
+    - ec2_vpc_subnet_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          subnet-id: "{{ docker_subnet_id | mandatory }}"
+      register: ec2_vpc_subnet_facts_result
+    - set_fact:
+        docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
+    - ec2_vpc_route_table_facts:
+        region: "{{ region | mandatory }}"
+        filters:
+          association.subnet-id: "{{ docker_subnet_id | mandatory }}"
+      register: ec2_vpc_route_table_facts_result
+    - set_fact:
+        private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
+  roles:
+    - role: tap
+      cf_director_uuid: "{{ bosh_director_uuid }}"
+      cf_dns: "{{ bosh_dns }}"
+      cf_bosh_security_group: "{{ bosh_default_security_groups | first }}"
+      cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
+  environment:
+    PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
+    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    ftp_proxy: "{{ ftp_proxy }}"
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
