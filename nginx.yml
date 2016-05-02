@@ -167,6 +167,6 @@
   post_tasks:
     - name: Singnal the NGINX wait condition handle
       command: cfn-signal -s true -r 'NGINX installed and configured.' {{ nginx_wait_condition_handle }}
-      when: nginx_wait_condition_handle
+      when: nginx_wait_condition_handle and provider == 'aws'
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

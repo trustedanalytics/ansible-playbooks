@@ -81,12 +81,12 @@
           bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
       when: provider == 'aws'
     - block:
-      - os_networks_facts:
-          cloud: TAP
-          region_name: "{{ region | mandatory }}"
-          filters:
-            id: "{{ bosh_subnet_id | mandatory }}"
-        register: os_network_facts_result
+###      - os_networks_facts:
+###          cloud: TAP
+###          region_name: "{{ region | mandatory }}"
+###          filters:
+###            id: "{{ bosh_subnet_id | mandatory }}"
+###        register: os_network_facts_result
       - os_subnets_facts:
           cloud: TAP
           filters:
@@ -107,6 +107,10 @@
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     ftp_proxy: "{{ ftp_proxy }}"
+  post_tasks:
+    - name: Signal the BOSH Director wait condition handle
+      command: cfn-signal -s true -r 'BOSH Director deployed.' {{ bosh_director_wait_condition_handle }}
+      when: bosh_director_wait_condition_handle and provider == 'aws'
 
 - name: Deploy Trusted Analytics Platform
   hosts: jump-boxes
@@ -158,6 +162,7 @@
       register: ec2_vpc_route_table_facts_result
     - set_fact:
         private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
+  # TODO: Create generic role for BOSH deployment.
   roles:
     - role: tap
       cf_director_uuid: "{{ bosh_director_uuid }}"
@@ -170,5 +175,12 @@
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
     ftp_proxy: "{{ ftp_proxy }}"
+  post_tasks:
+    - name: Signal the Cloud Foundry wait condition handle
+      command: cfn-signal -s true -r 'Cloud Foundry deployed.' {{ cf_wait_condition_handle }}
+      when: cf_wait_condition_handle and provider == 'aws'
+    - name: Signal the Docker Broker wait condition handle
+      command: cfn-signal -s true -r 'Docker Broker deployed.' {{ docker_broker_wait_condition_handle }}
+      when: docker_broker_wait_condition_handle and provider == 'aws'
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
