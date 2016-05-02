@@ -25,5 +25,5 @@ bosh_cpi_release_sha1: 6621ee1326e7136d9dbebacd1158d101618dc719
 bosh_stemcell_sha1: 0e0f48f064663b13990c77092e265ae185db1db2
 bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-openstack-kvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
 
-bosh_instance_type: m1.medium
+bosh_instance_type: m1.large
 
