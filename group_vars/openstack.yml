@@ -31,3 +31,22 @@ bosh_instance_type: m1.large
 cf_small_z1_instance_type: m1.large
 cf_compilation_z1_instance_type: m1.large
 
+# CF Stemcell
+cf_bosh_stemcell_name: bosh-openstack-kvm-ubuntu-trusty-go_agent
+cf_bosh_stemcell_version: {{ bosh_stemcell_version }}
+
+#for internal use only only
+cf_relases:
+  docker: http://bihal.sclab.intel.com/docker-boshrelease-23.tgz
+  uaa: http://bihal.sclab.intel.com/uaa-intel-4.tgz
+  cf: http://bihal.sclab.intel.com/cf-release-212.tgz
+
+cf_stemcell: http://bihal.sclab.intel.com/bosh-stemcell-3104-openstack-kvm-ubuntu-trusty-go_agent.tgz
+
+#cf_relases:
+#  docker: https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
+#  uaa: https://repo.gotapaas.eu/files/uaa-intel-4.tgz
+#  cf: https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
+#
+#cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
+

@@ -79,4 +79,11 @@ docker_instance_type: m3.xlarge
 quay_io_username: null
 quay_io_password: null
 
+cf_relases:
+  docker: https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
+  uaa: https://repo.gotapaas.eu/files/uaa-intel-4.tgz
+  cf: https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
+
+cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
+
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

@@ -23,11 +23,20 @@
   changed_when: shell_result.stdout | search('Release uploaded')
   failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Release `.*\' already exists')
   with_items:
-    - https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
-    - https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
     - "{{ ansible_env['HOME'] }}/uaa-intel-boshrelease/releases/uaa-intel/uaa-intel-5.yml"
 
-- shell: bosh --no-color -n upload stemcell https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
+- get_url: url="{{ item.value }}" dest="{{ ansible_env['HOME'] }}/{{ item.key }}.tgz" use_proxy=yes force=no
+  with_dict: "{{ cf_relases }}"
+
+- get_url: url="{{ cf_stemcell }}" dest="{{ ansible_env['HOME'] }}/cf_stemcell.tgz" use_proxy=yes force=no
+
+- shell: bosh --no-color -n upload release "{{ ansible_env['HOME'] }}/{{ item.key }}.tgz"
+  register: shell_result
+  changed_when: shell_result.stdout | search('Release uploaded')
+  failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Release `.*\' already exists')
+  with_dict: "{{ cf_relases }}"
+
+- shell: bosh --no-color -n upload stemcell --skip-if-exists "{{ ansible_env['HOME'] }}/cf_stemcell.tgz"
   register: shell_result
   changed_when: shell_result.stdout | search('Stemcell uploaded and created.')
   failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Stemcell `.*\' already exists')
