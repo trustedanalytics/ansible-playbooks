@@ -26,7 +26,7 @@
     - "{{ ansible_env['HOME'] }}/uaa-intel-boshrelease/releases/uaa-intel/uaa-intel-5.yml"
 
 - get_url: url="{{ item.value }}" dest="{{ ansible_env['HOME'] }}/{{ item.key }}.tgz" use_proxy=yes force=no
-  with_dict: "{{ cf_relases }}"
+  with_dict: "{{ cf_releases }}"
 
 - get_url: url="{{ cf_stemcell }}" dest="{{ ansible_env['HOME'] }}/cf_stemcell.tgz" use_proxy=yes force=no
 
@@ -34,7 +34,7 @@
   register: shell_result
   changed_when: shell_result.stdout | search('Release uploaded')
   failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Release `.*\' already exists')
-  with_dict: "{{ cf_relases }}"
+  with_dict: "{{ cf_releases }}"
 
 - shell: bosh --no-color -n upload stemcell --skip-if-exists "{{ ansible_env['HOME'] }}/cf_stemcell.tgz"
   register: shell_result
