@@ -50,3 +50,6 @@ cf_stemcell: http://bihal.sclab.intel.com/bosh-stemcell-3104-openstack-kvm-ubunt
 #
 #cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
 
+# Docker
+docker_instance_type: m1.xlarge
+docker_errand_instance_type: m1.medium

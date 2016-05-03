@@ -11,7 +11,7 @@ compilation:
   network: default
   reuse_compilation_vms: true
   cloud_properties:
-    instance_type: m3.xlarge
+    instance_type: "{{ docker_instance_type }}"
 
 update:
   canaries: 0
@@ -24,13 +24,17 @@ networks:
   - name: default
     type: manual
     subnets:
-      - range: "{{ docker_subnet.cidr_block }}"
-        gateway: "{{ docker_subnet.cidr_block | nthhost(1) }}"
+      - range: "{{ docker_cidr }}"
+        gateway: "{{ docker_cidr | nthhost(1) }}"
         dns: ["{{ cf_dns | join(', ') }}"]
-        reserved: ["{{ docker_subnet.cidr_block | nthhost(2) }} - {{ docker_subnet.cidr_block | nthhost(3) }}"]
-        static: ["{{ docker_subnet.cidr_block | nthhost(4) }}"]
+        reserved: ["{{ docker_cidr | nthhost(2) }} - {{ docker_cidr | nthhost(3) }}"]
+        static: ["{{ docker_cidr | nthhost(4) }}"]
         cloud_properties:
+{% if (provider == 'aws') %}
           subnet: "{{ docker_subnet_id }}"
+{% elif  (provider == 'openstack') %}
+          net_id: "{{ docker_subnet_id }}"
+{% endif %}
           security_groups:
             - "{{ cf_bosh_security_group }}"
             - "{{ docker_broker_security_group }}"
@@ -50,7 +54,7 @@ resource_pools:
       name: "{{ cf_bosh_stemcell_name }}"
       version: "{{ cf_bosh_stemcell_version }}"
     cloud_properties:
-      instance_type: m3.medium
+      instance_type: "{{ docker_errand_instance_type }}"
 
 jobs:
   - name: broker
@@ -64,7 +68,7 @@ jobs:
       - name: default
         default: [dns, gateway]
         static_ips:
-          - "{{ docker_subnet.cidr_block | nthhost(4) }}"
+          - "{{ docker_cidr | nthhost(4) }}"
 
   - name: fetch-containers-images
     template: fetch-containers-images
@@ -98,7 +102,7 @@ properties:
     password: "{{ cf_password }}"
     port: 4222
     machines:
-      - "{{ cf_private_subnet.cidr_block | nthhost(6) }}"
+      - "{{ cf_private_cidr | nthhost(6) }}"
 
   cf:
     api_url: "http://api.{{ cf_system_domain }}"
@@ -113,7 +117,7 @@ properties:
       nofile: 65536
 
   fetch_containers_images:
-    docker_url: tcp://{{ docker_subnet.cidr_block | nthhost(4) }}:4243
+    docker_url: tcp://{{ docker_cidr | nthhost(4) }}:4243
 
   broker:
     name: cf-containers-broker

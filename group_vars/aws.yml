@@ -40,3 +40,7 @@ cf_releases:
   cf: https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
 
 cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
+
+# Docker
+docker_instance_type: m3.xlarge
+docker_errand_instance_type: m3.medium

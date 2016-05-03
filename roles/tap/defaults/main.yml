@@ -75,6 +75,7 @@ docker_subnet_id: null
 docker_broker_security_group: docker-broker
 docker_release_version: 23
 docker_instance_type: m3.xlarge
+docker_errand_instance_type: m3.medium
 
 quay_io_username: null
 quay_io_password: null
