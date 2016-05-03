@@ -12,21 +12,25 @@ networks:
 - name: cf_private
   type: manual
   subnets:
-  - range: {{ cf_private_subnet.cidr_block }}
-    gateway: {{ cf_private_subnet.cidr_block | nthhost(1) }}
+  - range: {{ cf_private_cidr }}
+    gateway: {{ cf_private_cidr | nthhost(1) }}
     dns: [{{ cf_dns | join(', ') }}]
-    reserved: ["{{ cf_private_subnet.cidr_block | nthhost(2) }} - {{ cf_private_subnet.cidr_block | nthhost(3) }}"]
-    static: ["{{ cf_private_subnet.cidr_block | nthhost(4) }} - {{ cf_private_subnet.cidr_block | nthhost(8) }}"]
+    reserved: ["{{ cf_private_cidr | nthhost(2) }} - {{ cf_private_cidr | nthhost(3) }}"]
+    static: ["{{ cf_private_cidr | nthhost(4) }} - {{ cf_private_cidr | nthhost(8) }}"]
     cloud_properties:
       subnet: {{ cf_private_subnet_id }}
+{% if (provider=='openstack') }}
+      security_groups:
+        - {{ cf_private_security_group }}
+{% endif %}
 
 - name: cf_public
   type: manual
   subnets:
-  - range: {{ cf_public_subnet.cidr_block }}
-    gateway: {{ cf_public_subnet.cidr_block | nthhost(1) }}
+  - range: {{ cf_public_cidr }}
+    gateway: {{ cf_public_cidr | nthhost(1) }}
     dns: [{{ cf_dns | join(', ') }}]
-    reserved: ["{{ cf_public_subnet.cidr_block | nthhost(2) }} - {{ cf_public_subnet.cidr_block | nthhost(3) }}"]
+    reserved: ["{{ cf_public_cidr | nthhost(2) }} - {{ cf_public_cidr | nthhost(3) }}"]
     cloud_properties:
       subnet: {{ cf_public_subnet_id }}
       security_groups:
@@ -44,8 +48,8 @@ resource_pools:
     name: {{ cf_bosh_stemcell_name }}
     version: {{ cf_bosh_stemcell_version }}
   cloud_properties:
-    availability_zone: {{ cf_private_subnet.availability_zone }}
-    instance_type: c3.large
+    availability_zone: {{ cf_private_az }}
+    instance_type: {{ cf_small_z1_instance_type }}
 
 - name: runner_z1
   network: cf_private
@@ -53,7 +57,7 @@ resource_pools:
     name: {{ cf_bosh_stemcell_name }}
     version: {{ cf_bosh_stemcell_version }}
   cloud_properties:
-    availability_zone: {{ cf_private_subnet.availability_zone }}
+    availability_zone: {{ cf_private_az }}
     instance_type: {{ cf_runner_z1_instance_type }}
 
 compilation:
@@ -61,8 +65,8 @@ compilation:
   network: cf_private
   reuse_compilation_vms: true
   cloud_properties:
-    availability_zone: {{ cf_private_subnet.availability_zone }}
-    instance_type: c3.large
+    availability_zone: {{ cf_private_az }}
+    instance_type: {{ cf_compilation_z1_instance_type }}
 
 update:
   canaries: 1
@@ -81,7 +85,7 @@ jobs:
   - {name: metron_agent, release: cf}
   networks:
   - name: cf_private
-    static_ips: [{{ cf_private_subnet.cidr_block | nthhost(6) }}]
+    static_ips: [{{ cf_private_cidr | nthhost(6) }}]
 
 - name: etcd_z1
   instances: 1
@@ -93,11 +97,11 @@ jobs:
   - {name: metron_agent, release: cf}
   networks:
   - name: cf_private
-    static_ips: [{{ cf_private_subnet.cidr_block | nthhost(7) }}]
+    static_ips: [{{ cf_private_cidr | nthhost(7) }}]
   properties:
     etcd_metrics_server:
       nats:
-        machines: [{{ cf_private_subnet.cidr_block | nthhost(6) }}]
+        machines: [{{ cf_private_cidr | nthhost(6) }}]
         password: {{ cf_password }}
         username: nats
 
@@ -110,7 +114,7 @@ jobs:
   - {name: metron_agent, release: cf}
   networks:
   - name: cf_private
-    static_ips: [{{ cf_private_subnet.cidr_block | nthhost(8) }}]
+    static_ips: [{{ cf_private_cidr | nthhost(8) }}]
 
 - name: postgres_z1
   instances: 1
@@ -121,7 +125,7 @@ jobs:
   - {name: metron_agent, release: cf}
   networks:
   - name: cf_private
-    static_ips: [{{ cf_private_subnet.cidr_block | nthhost(4) }}]
+    static_ips: [{{ cf_private_cidr | nthhost(4) }}]
   update:
     serial: true
 
@@ -139,8 +143,8 @@ jobs:
   - name: cf_private
   properties:
     nfs_server:
-      address: {{ cf_private_subnet.cidr_block | nthhost(8) }}
-      allow_from_entries: [{{ cf_private_subnet.cidr_block }}]
+      address: {{ cf_private_cidr | nthhost(8) }}
+      allow_from_entries: [{{ cf_private_cidr }}]
     route_registrar:
       routes:
       - name: api
@@ -233,7 +237,7 @@ jobs:
         users:
         - admin|{{ cf_password }}|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose,routing.router_groups.read
     uaadb:
-      address: {{ cf_private_subnet.cidr_block | nthhost(4) }}
+      address: {{ cf_private_cidr | nthhost(4) }}
       databases:
       - {name: uaadb, tag: uaa}
       db_scheme: postgresql
@@ -249,7 +253,7 @@ jobs:
   - {name: metron_agent, release: cf}
   networks:
   - name: cf_private
-    static_ips: [{{ cf_private_subnet.cidr_block | nthhost(5) }}]
+    static_ips: [{{ cf_private_cidr | nthhost(5) }}]
   properties:
     dropsonde: {enabled: true}
 
@@ -321,7 +325,7 @@ properties:
     staging_upload_password: {{ cf_password }}
     staging_upload_user: staging_upload_user
   ccdb:
-    address: {{ cf_private_subnet.cidr_block | nthhost(4) }}
+    address: {{ cf_private_cidr | nthhost(4) }}
     databases:
     - {name: ccdb, tag: cc}
     db_scheme: postgres
@@ -343,7 +347,7 @@ properties:
   description: Cloud Foundry sponsored by Pivotal
   domain: {{ cf_system_domain }}
   etcd:
-    machines: [{{ cf_private_subnet.cidr_block | nthhost(7) }}]
+    machines: [{{ cf_private_cidr | nthhost(7) }}]
     peer_require_ssl: false
     require_ssl: false
   hm9000:
@@ -352,7 +356,7 @@ properties:
     port: 4443
   loggregator:
     etcd:
-      machines: [{{ cf_private_subnet.cidr_block | nthhost(7) }}]
+      machines: [{{ cf_private_cidr | nthhost(7) }}]
   loggregator_endpoint:
     shared_secret: {{ cf_password }}
   login:
@@ -378,13 +382,13 @@ properties:
   metron_endpoint:
     shared_secret: {{ cf_password }}
   nats:
-    machines: [{{ cf_private_subnet.cidr_block | nthhost(6) }}]
+    machines: [{{ cf_private_cidr | nthhost(6) }}]
     password: {{ cf_password }}
     port: 4222
     user: nats
   nfs_server:
-    address: {{ cf_private_subnet.cidr_block | nthhost(8) }}
-    allow_from_entries: [{{ cf_private_subnet.cidr_block }}]
+    address: {{ cf_private_cidr | nthhost(8) }}
+    allow_from_entries: [{{ cf_private_cidr }}]
   router:
     status:
       password: {{ cf_password }}
