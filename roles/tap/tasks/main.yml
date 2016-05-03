@@ -39,7 +39,7 @@
 - shell: bosh --no-color -n upload stemcell --skip-if-exists "{{ ansible_env['HOME'] }}/cf_stemcell.tgz"
   register: shell_result
   changed_when: shell_result.stdout | search('Stemcell uploaded and created.')
-  failed_when: shell_result.rc != 0 and not shell_result.stdout | search('Stemcell `.*\' already exists')
+  failed_when: shell_result.rc != 0
 
 - template: src={{ item }}.yml.j2 dest={{ ansible_env['HOME'] }}/{{ item }}.yml
             validate='python -c "import yaml; yaml.load(file('%s', 'r'))"'
