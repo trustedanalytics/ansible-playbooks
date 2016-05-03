@@ -81,19 +81,12 @@
           bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
       when: provider == 'aws'
     - block:
-###      - os_networks_facts:
-###          cloud: TAP
-###          region_name: "{{ region | mandatory }}"
-###          filters:
-###            id: "{{ bosh_subnet_id | mandatory }}"
-###        register: os_network_facts_result
       - os_subnets_facts:
           cloud: TAP
           filters:
             network_id: "{{ bosh_subnet_id | mandatory }}"
-        register: os_subnet_facts_result
       - set_fact:
-          bosh_cidr: "{{ os_subnet_facts_result.ansible_facts.openstack_subnets[0].cidr }}"
+          bosh_cidr: "{{ openstack_subnets[0].cidr }}"
           bosh_availability_zone: "{{ availability_zone }}"
       when: provider == 'openstack'
   roles:
