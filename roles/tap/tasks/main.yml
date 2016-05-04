@@ -58,6 +58,11 @@
 - meta: flush_handlers
 
 - shell: "{{ item }}"
+  environment:
+    no_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
+    ftp_proxy: ""
   register: shell_result
   failed_when: shell_result.rc != 0 and not shell_result.stdout | search('(already exists)|(no new users given)')
   with_items:
@@ -264,6 +269,18 @@
 ###  register: shell_result
 ###  failed_when: shell_result.rc != 0 or not shell_result.stdout | search('tap_console')
 ###
+=======
+
+- shell: uaac clients
+  environment:
+    no_proxy: ""
+    http_proxy: ""
+    https_proxy: ""
+    ftp_proxy: ""
+  register: shell_result
+  failed_when: shell_result.rc != 0 or not shell_result.stdout | search('tap_console')
+
+>>>>>>> Create UAA users
 - shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
   when: template_result.changed
   notify:
