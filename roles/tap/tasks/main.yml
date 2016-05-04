@@ -264,15 +264,15 @@
 ###  register: shell_result
 ###  failed_when: shell_result.rc != 0 or not shell_result.stdout | search('tap_console')
 ###
-###- shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
-###  when: template_result.changed
-###  notify:
-###    - Deploy
-###  with_items:
-###    - docker-broker
-###
-###- meta: flush_handlers
-###
+- shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
+  when: template_result.changed
+  notify:
+    - Deploy
+  with_items:
+    - docker-broker
+
+- meta: flush_handlers
+
 ###- pip: name=awscli version=1.10.22
 ###
 ###- shell: bosh instances --detail | sed -nr 's/.*broker.* (i-[a-zA-Z0-9]+) .*$/\1/p'
