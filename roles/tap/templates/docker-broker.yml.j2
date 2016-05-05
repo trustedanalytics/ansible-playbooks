@@ -912,32 +912,38 @@ properties:
                   unit: 'MONTHLY'
               bullets:
                 - 'Dedicated Mosquitto server'
-      - id: '6b33e19e-26d3-11e5-a4ba-00155d3ca71c'
-        name: 'ipython'
-        description: 'IPython notebook server with the full SciPy stack + more'
+      - id: '1fa791de-05cc-11e6-bb82-fa163e8901f2'
+        name: 'jupyter'
+        description: 'Jupyter notebook server with the full SciPy stack + more'
         bindable: true
         tags:
-          - 'ipython'
+          - 'jupyter'
           - 'data-science-tool'
         metadata:
-          displayName: 'ipython'
+          displayName: 'jupyter'
           imageUrl: ''
-          longDescription: 'Docker container for the [SciPy stack](../scipystack) and configured IPython notebook server.'
+          longDescription: 'Docker container for the [SciPy stack](../scipystack) and configured Jupyter notebook server.'
           providerDisplayName: ''
-          documentationUrl: 'http://ipython.org/documentation.html'
-          supportUrl: 'https://github.com/ipython/ipython/wiki/Frequently-asked-questions'
+          documentationUrl: 'http://jupyter.readthedocs.org/en/latest/index.html'
+          supportUrl: 'http://jupyter.org/community.html'
         dashboard_client:
-          id: 'ipython-dashboard'
-          secret: 'ipython-secret'
+          id: 'jupyter-dashboard'
+          secret: 'jupyter-secret'
           redirect_uri: "http://cf-containers-broker.{{ cf_system_domain }}/manage/auth/cloudfoundry/callback"
         plans:
-          - id: 'd2b7da94-26d0-11e5-8396-00155d3ca71c'
+          - id: '260c8700-05cc-11e6-bb82-fa163e8901f2'
             name: 'free'
             container:
               backend: 'docker'
-              image: 'ipython/scipyserver'
+              image: 'quay.io/trustedanalytics/jupyter'
               tag: 'latest'
-              environment: ['USE_HTTP=1']
+              environment:
+                - 'USE_HTTP=1'
+                - 'CDH_MANAGER_HOSTNAME="cdh-master-2.node.consul"'
+                - 'CDH_CLUSTER_NAME="CDH-cluster"'
+                - 'YARN_CLIENT_CONFIG=http://cdh-master-2.node.consul:7180/api/v11/clusters/CDH-cluster/services/YARN/clientConfig'
+                - 'SPARK_ON_YARN_CLIENT_CONFIG=http://cdh-master-2.node.consul:7180/api/v11/clusters/CDH-cluster/services/SPARK_ON_YARN/clientConfig'
+                - 'HDFS_CLIENT_CONFIG=http://cdh-master-2.node.consul:7180/api/v11/clusters/CDH-cluster/services/HDFS/clientConfig'
             credentials:
               password:
                 key: 'PASSWORD'
@@ -950,7 +956,7 @@ properties:
                     usd: 0.0
                   unit: 'MONTHLY'
               bullets:
-                - 'Dedicated IPython running inside a Docker container'
+                - 'Dedicated Jupyter running inside a Docker container'
       - id: '52216016-3211-11e5-bf02-00155d3ca702'
         name: 'rstudio'
         description: 'RStudio® IDE for programming in R langauge'
