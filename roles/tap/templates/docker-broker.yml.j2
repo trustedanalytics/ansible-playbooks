@@ -32,7 +32,7 @@ networks:
         cloud_properties:
 {% if (provider == 'aws') %}
           subnet: "{{ docker_subnet_id }}"
-{% elif  (provider == 'openstack') %}
+{% elif (provider == 'openstack') %}
           net_id: "{{ docker_subnet_id }}"
 {% endif %}
           security_groups:
@@ -103,6 +103,13 @@ properties:
     port: 4222
     machines:
       - "{{ cf_private_cidr | nthhost(6) }}"
+
+{% if (provider == 'openstack') %}
+  env:
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    no_proxy: "{{ no_proxy }},{{ docker_cidr | nthhost(4) }},{{ cf_private_cidr | nthhost(6) }},.{{ cf_system_domain }}"
+{% endif %}
 
   cf:
     api_url: "http://api.{{ cf_system_domain }}"
