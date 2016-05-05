@@ -289,25 +289,46 @@
     - docker-broker
 
 - meta: flush_handlers
+- block:
+  - pip: name=awscli version=1.10.22
 
-###- pip: name=awscli version=1.10.22
-###
-###- shell: bosh instances --detail | sed -nr 's/.*broker.* (i-[a-zA-Z0-9]+) .*$/\1/p'
-###  register: shell_result
-###
-###- set_fact:
-###    docker_instance_id: "{{ shell_result.stdout }}"
-###
-###- name: create route
-###  shell: "aws ec2 create-route --route-table-id {{ private_route_table.id }} --destination-cidr-block 172.17.0.0/16 --instance-id {{ docker_instance_id }}"
-###  environment:
-###    AWS_DEFAULT_REGION: "{{ region | mandatory }}"
-###
-###- name: set source-dest-check
-###  shell: 'aws ec2 modify-instance-attribute --instance-id {{ docker_instance_id }} --source-dest-check "{\"Value\": false}"'
-###  environment:
-###    AWS_DEFAULT_REGION: "{{ region | mandatory }}"
-###
+  - shell: bosh instances --detail | sed -nr 's/.*broker.* (i-[a-zA-Z0-9]+) .*$/\1/p'
+    register: shell_result
+
+  - set_fact:
+      docker_instance_id: "{{ shell_result.stdout }}"
+
+  - name: create route
+    shell: "aws ec2 create-route --route-table-id {{ private_route_table.id }} --destination-cidr-block 172.17.0.0/16 --instance-id {{ docker_instance_id }}"
+    environment:
+      AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+
+  - name: set source-dest-check
+    shell: 'aws ec2 modify-instance-attribute --instance-id {{ docker_instance_id }} --source-dest-check "{\"Value\": false}"'
+    environment:
+      AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+  when: provider == 'aws'
+
+- block:
+  - shell: >-
+      neutron --insecure --os-cloud TAP router-update {{ router_id | mandatory }} --routes
+      type=dict list=true destination=172.17.0.0/16,nexthop={{ docker_ip }}
+
+  - shell: neutron --insecure --os-cloud TAP net-show {{ docker_subnet_id }} -c subnets -f value
+    register: subnet_id
+  - debug: var=subnet_id.stdout
+
+  - shell: >-
+      neutron --insecure --os-cloud TAP port-list |
+      grep {{ subnet_id.stdout }}.*{{ docker_ip }} | cut -d ' ' -f2
+    register: port_id
+  - debug: var=port_id.stdout
+
+  - shell: >-
+      neutron --insecure --os-cloud TAP port-update {{ port_id.stdout }} --allowed-address-pairs
+      type=dict list=true ip_address={{ docker_cidr }} ip_address=172.17.0.0/16
+  when: provider == 'openstack'
+
 - pip: name=docker-py version=1.1.0
 
 # TODO: Pull all Docker images and disable fetching
