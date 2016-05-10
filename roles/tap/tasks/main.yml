@@ -15,6 +15,9 @@
 
 ---
 
+- git: repo=https://github.com/trustedanalytics/uaa-intel-boshrelease.git
+       dest={{ ansible_env['HOME'] }}/uaa-intel-boshrelease recursive=no
+
 - shell: bosh --no-color -n upload release {{ item }}
   register: shell_result
   changed_when: shell_result.stdout | search('Release uploaded')
@@ -22,7 +25,7 @@
   with_items:
     - https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
     - https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
-    - https://repo.gotapaas.eu/files/uaa-intel-4.tgz
+    - {{ ansible_env['HOME'] }}/uaa-intel-boshrelease/releases/uaa-intel/uaa-intel-5.yml
 
 - shell: bosh --no-color -n upload stemcell https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
   register: shell_result

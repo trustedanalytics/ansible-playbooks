@@ -317,6 +317,9 @@ properties:
     shared_secret: {{ cf_password }}
   login:
     asset_base_url: /resources/trustedanalytics
+    branding:
+      company_name: Trusted Analytics Platform
+    home_redirect: https://console.{{ cf_system_domain }}
     links:
       home: http://console.{{ cf_system_domain }}
       passwd: http://login.{{ cf_system_domain }}/forgot_password
@@ -329,11 +332,6 @@ properties:
       port: {{ cf_smtp_port }}
       senderEmail: {{ cf_smtp_sender_email }}
       senderName: {{ cf_smtp_sender_name }}
-    tiles:
-    - image: /resources/trustedanalytics/images/console.png
-      image-hover: /resources/trustedanalytics/images/console.png
-      login-link: https://console.{{ cf_system_domain }}
-      name: Developer console
   metron_agent:
     zone: z1
     deployment: minimal-aws
