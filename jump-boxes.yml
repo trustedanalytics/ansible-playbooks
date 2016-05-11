@@ -71,7 +71,7 @@
       set_fact:
          internal_no_proxy: "{{ bosh_ip }}"
 
-- include: proxy.yml
+    - include: proxy.yml
 
 - name: Install BOSH
   hosts: jump-boxes
