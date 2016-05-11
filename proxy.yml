@@ -22,6 +22,9 @@
         http_proxy: "{{ http_proxy | default() }}"
         https_proxy: "{{ https_proxy | default() }}"
         ftp_proxy: "{{ ftp_proxy | default() }}"
+    - set_fact:
+        no_proxy: "{{ no_proxy }},{{ internal_no_proxy }}"
+      when: "{{ no_proxy|length > 1 }}"
     - file:
         path: /etc/profile.d/proxy.sh
         owner: root

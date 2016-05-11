@@ -81,7 +81,7 @@ jobs:
 
   networks:
   - name: private
-    static_ips: [{{ bosh_cidr | nthhost(4) }}]
+    static_ips: [{{ bosh_ip }}]
     default: [dns, gateway]
 {% if bosh_elastic_ip is not none %}
   - name: public
@@ -108,19 +108,19 @@ jobs:
       adapter: postgres
 
     registry:
-      address: {{ bosh_cidr | nthhost(4) }}
-      host: {{ bosh_cidr | nthhost(4) }}
+      address: {{ bosh_ip }}
+      host: {{ bosh_ip }}
       db: *db
       http: {user: admin, password: {{ bosh_registry_password }}, port: 25777}
       username: admin
       password: {{ bosh_registry_password }}
       port: 25777
 {% if (provider == 'openstack') %}
-      endpoint: http://admin:{{ bosh_registry_password }}@{{ bosh_cidr | nthhost(4) }}:25777
+      endpoint: http://admin:{{ bosh_registry_password }}@{{ bosh_ip }}:25777
 {% endif %}
 
     blobstore:
-      address: {{ bosh_cidr | nthhost(4) }}
+      address: {{ bosh_ip }}
       port: 25250
       provider: dav
       director: {user: director, password: {{ bosh_director_password }}}
@@ -167,7 +167,7 @@ jobs:
       default_key_name: {{ bosh_default_key_name }}
       default_security_groups: [{{ bosh_default_security_groups | join(', ') }}]
 
-    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_cidr | nthhost(4) }}:4222"}
+    agent: {mbus: "nats://nats:{{ bosh_nats_password }}@{{ bosh_ip }}:4222"}
 
     ntp: &ntp [{{ bosh_ntp | join(', ') }}]
 
@@ -179,12 +179,12 @@ cloud_provider:
 {% endif %}
 
   ssh_tunnel:
-    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_cidr | nthhost(4) }} # <--- Replace with your Elastic IP address
+    host: {{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_ip }} # <--- Replace with your Elastic IP address
     port: 22
     user: vcap
     private_key: {{ bosh_private_key }} # Path relative to this manifest file
 
-  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_cidr | nthhost(4) }}:6868" # <--- Replace with Elastic IP
+  mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_ip }}:6868" # <--- Replace with Elastic IP
 
   properties:
 {% if (provider == 'aws') %}

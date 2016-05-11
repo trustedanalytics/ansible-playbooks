@@ -14,7 +14,7 @@
 #
 
 ---
-- include: proxy.yml
+
 - hosts: all
   tasks:
     - block:

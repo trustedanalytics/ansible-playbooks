@@ -36,17 +36,42 @@
         notify:
           - Signal the key name wait condition handle
       - meta: flush_handlers
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ bosh_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          bosh_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
       when: provider == 'aws'
 
     - block:
       - name: Set OpenStack cedentials
         set_fact:
           openstack: "{{ lookup('file', '/etc/openstack/clouds.yaml') | from_yaml }}"
+      - os_subnets_facts:
+          cloud: TAP
+          filters:
+            network_id: "{{ bosh_subnet_id | mandatory }}"
+      - set_fact:
+          bosh_cidr: "{{ openstack_subnets[0].cidr }}"
+          bosh_availability_zone: "{{ availability_zone }}"
       when: provider == 'openstack'
+
+    - name: Set facts with IP of internal services
+      set_fact:
+          bosh_ip: "{{ bosh_cidr | nthhost(4) }}"
 
     - name: Set the key pair used by BOSH
       set_fact: bosh_default_key_name={{ key_name | mandatory }}
                 bosh_private_key={{ user_result.ssh_key_file | default('/root/.ssh/id_rsa') }}
+
+    - name: Set no_proxy for internal addresses
+      set_fact:
+         internal_no_proxy: "{{ bosh_ip }}"
+
+- include: proxy.yml
 
 - name: Install BOSH
   hosts: jump-boxes
@@ -70,25 +95,10 @@
         - bosh_admin_password
         - bosh_hm_password
         - bosh_mbus_password
-    - block:
-      - ec2_vpc_subnet_facts:
-          region: "{{ region | mandatory }}"
-          filters:
-            subnet-id: "{{ bosh_subnet_id | mandatory }}"
-        register: ec2_vpc_subnet_facts_result
-      - set_fact:
-          bosh_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
-          bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
-      when: provider == 'aws'
-    - block:
-      - os_subnets_facts:
-          cloud: TAP
-          filters:
-            network_id: "{{ bosh_subnet_id | mandatory }}"
-      - set_fact:
-          bosh_cidr: "{{ openstack_subnets[0].cidr }}"
-          bosh_availability_zone: "{{ availability_zone }}"
-      when: provider == 'openstack'
+#    - block:
+#      when: provider == 'aws'
+#    - block:
+#      when: provider == 'openstack'
   roles:
     - { role: rvm_io.rvm1-ruby, become: yes }
     - role: bosh
