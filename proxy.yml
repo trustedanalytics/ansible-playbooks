@@ -23,7 +23,7 @@
         https_proxy: "{{ https_proxy | default() }}"
         ftp_proxy: "{{ ftp_proxy | default() }}"
     - set_fact:
-        no_proxy: "{{ no_proxy }},{{ internal_no_proxy }}"
+        no_proxy: "{{ no_proxy }},{{ internal_no_proxy }},127.0.0.1,localhost,.consul"
       when: "{{ no_proxy|length > 1 }}"
     - file:
         path: /etc/profile.d/proxy.sh
@@ -41,3 +41,4 @@
         https_proxy: "{{ https_proxy }}"
         ftp_proxy: "{{ ftp_proxy }}"
 
+# vi:et:sw=2 ts=2 sts=2 ft=ansible
