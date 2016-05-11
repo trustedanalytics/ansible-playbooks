@@ -43,6 +43,37 @@
       - set_fact:
           bosh_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
           bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ cf_private_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          cf_private_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          cf_private_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ cf_public_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          cf_public_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          cf_public_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ docker_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          docker_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          docker_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_route_table_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            association.subnet-id: "{{ docker_subnet_id | mandatory }}"
+        register: ec2_vpc_route_table_facts_result
+      - set_fact:
+          private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
       when: provider == 'aws'
 
     - block:
@@ -56,11 +87,37 @@
       - set_fact:
           bosh_cidr: "{{ openstack_subnets[0].cidr }}"
           bosh_availability_zone: "{{ availability_zone }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ cf_private_subnet_id | mandatory }}"
+      - set_fact:
+          cf_private_cidr: "{{ openstack_subnets[0].cidr }}"
+          cf_private_az: "{{ availability_zone }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ cf_public_subnet_id | mandatory }}"
+      - set_fact:
+          cf_public_cidr: "{{ openstack_subnets[0].cidr }}"
+          cf_public_az: "{{ availability_zone }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ docker_subnet_id | mandatory }}"
+      - set_fact:
+          docker_cidr: "{{ openstack_subnets[0].cidr }}"
+          docker_az: "{{ availability_zone }}"
       when: provider == 'openstack'
 
     - name: Set facts with IP of internal services
       set_fact:
           bosh_ip: "{{ bosh_cidr | nthhost(4) }}"
+          docker_ip: "{{ docker_cidr | nthhost(4) }}"
+          nats_ip: "{{ cf_private_cidr | nthhost(6) }}"
 
     - name: Set the key pair used by BOSH
       set_fact: bosh_default_key_name={{ key_name | mandatory }}
@@ -68,7 +125,7 @@
 
     - name: Set no_proxy for internal addresses
       set_fact:
-         internal_no_proxy: "{{ bosh_ip }}"
+         internal_no_proxy: "{{ bosh_ip }},{{ docker_ip }},{{ nats_ip }}"
 
     - include: proxy.yml
 
@@ -136,72 +193,14 @@
         - cf_login_client_secret
         - cf_notifications_client_secret
         - cf_uaadb_user_password
-    - block:
-      - ec2_vpc_subnet_facts:
-          region: "{{ region | mandatory }}"
-          filters:
-            subnet-id: "{{ cf_private_subnet_id | mandatory }}"
-        register: ec2_vpc_subnet_facts_result
-      - set_fact:
-#          cf_private_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-          cf_private_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
-          cf_private_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
-      - ec2_vpc_subnet_facts:
-          region: "{{ region | mandatory }}"
-          filters:
-            subnet-id: "{{ cf_public_subnet_id | mandatory }}"
-        register: ec2_vpc_subnet_facts_result
-      - set_fact:
-#          cf_public_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-          cf_public_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
-          cf_public_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
-      - ec2_vpc_subnet_facts:
-          region: "{{ region | mandatory }}"
-          filters:
-            subnet-id: "{{ docker_subnet_id | mandatory }}"
-        register: ec2_vpc_subnet_facts_result
-      - set_fact:
-#          docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-          docker_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
-          docker_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
-      - ec2_vpc_route_table_facts:
-          region: "{{ region | mandatory }}"
-          filters:
-            association.subnet-id: "{{ docker_subnet_id | mandatory }}"
-        register: ec2_vpc_route_table_facts_result
-      - set_fact:
-          private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
-      when: provider == 'aws'
-    - block:
-      - os_subnets_facts:
-          cloud: TAP
-          region_name: "{{ region | mandatory }}"
-          filters:
-            network_id: "{{ cf_private_subnet_id | mandatory }}"
-      - set_fact:
-          cf_private_cidr: "{{ openstack_subnets[0].cidr }}"
-          cf_private_az: "{{ availability_zone }}"
-      - os_subnets_facts:
-          cloud: TAP
-          region_name: "{{ region | mandatory }}"
-          filters:
-            network_id: "{{ cf_public_subnet_id | mandatory }}"
-      - set_fact:
-          cf_public_cidr: "{{ openstack_subnets[0].cidr }}"
-          cf_public_az: "{{ availability_zone }}"
-      - os_subnets_facts:
-          cloud: TAP
-          region_name: "{{ region | mandatory }}"
-          filters:
-            network_id: "{{ docker_subnet_id | mandatory }}"
-      - set_fact:
-          docker_cidr: "{{ openstack_subnets[0].cidr }}"
-          docker_az: "{{ availability_zone }}"
-      # TODO: router stuff
-      - debug: var=cf_private_cidr
-      - debug: var=cf_public_cidr
-      - debug: var=docker_cidr
-      when: provider == 'openstack'
+#    - block:
+#      when: provider == 'aws'
+#    - block:
+#      # TODO: router stuff
+#      - debug: var=cf_private_cidr
+#      - debug: var=cf_public_cidr
+#      - debug: var=docker_cidr
+#      when: provider == 'openstack'
   # TODO: Create generic role for BOSH deployment.
   roles:
     - role: tap

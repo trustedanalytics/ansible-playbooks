@@ -28,7 +28,7 @@ networks:
         gateway: "{{ docker_cidr | nthhost(1) }}"
         dns: ["{{ cf_dns | join(', ') }}"]
         reserved: ["{{ docker_cidr | nthhost(2) }} - {{ docker_cidr | nthhost(3) }}"]
-        static: ["{{ docker_cidr | nthhost(4) }}"]
+        static: ["{{ docker_ip }}"]
         cloud_properties:
 {% if (provider == 'aws') %}
           subnet: "{{ docker_subnet_id }}"
@@ -68,7 +68,7 @@ jobs:
       - name: default
         default: [dns, gateway]
         static_ips:
-          - "{{ docker_cidr | nthhost(4) }}"
+          - "{{ docker_ip }}"
 
   - name: fetch-containers-images
     template: fetch-containers-images
@@ -102,13 +102,13 @@ properties:
     password: "{{ cf_password }}"
     port: 4222
     machines:
-      - "{{ cf_private_cidr | nthhost(6) }}"
+      - "{{ nats_ip }}"
 
 {% if (provider == 'openstack') %}
   env:
     http_proxy: "{{ http_proxy }}"
     https_proxy: "{{ https_proxy }}"
-    no_proxy: "{{ no_proxy }},{{ docker_cidr | nthhost(4) }},{{ cf_private_cidr | nthhost(6) }},.{{ cf_system_domain }}"
+    no_proxy: "{{ no_proxy }}"
 {% endif %}
 
   cf:
@@ -124,7 +124,7 @@ properties:
       nofile: 65536
 
   fetch_containers_images:
-    docker_url: tcp://{{ docker_cidr | nthhost(4) }}:4243
+    docker_url: tcp://{{ docker_ip }}:4243
 
   broker:
     name: cf-containers-broker
