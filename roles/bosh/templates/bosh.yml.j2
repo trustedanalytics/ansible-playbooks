@@ -7,11 +7,7 @@ releases:
 {% if bosh_release_sha1 is not none %}
   sha1: {{ bosh_release_sha1 }}
 {% endif %}
-{% if (provider == 'aws') %}
-- name: bosh-aws-cpi
-{% elif  (provider == 'openstack') %}
-- name: bosh-openstack-cpi
-{% endif %}
+- name: bosh-{{ provider }}-cpi
   url: {{ bosh_cpi_release_url }}
 {% if bosh_cpi_release_sha1 is not none %}
   sha1: {{ bosh_cpi_release_sha1 }}
