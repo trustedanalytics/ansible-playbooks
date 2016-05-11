@@ -126,9 +126,17 @@
 - copy: dest=/etc/profile.d/docker.sh content="export DOCKER_HOST={{ docker_url }}"
 
 - shell: "docker login -u {{ quay_io_username }} -p {{ quay_io_password }} -e test@test quay.io"
+  ignore_errors: True
+  register: docker_login
   environment:
     DOCKER_HOST: "{{ docker_url }}"
   when: quay_io_username and quay_io_password
+
+#fallback to building images when cannot login into quay
+- set_fact:
+    quay_io_username: ""
+    quay_io_password: ""
+  when: docker_login.failed
 
 #docker_image doesn't work for downloading images only: https://github.com/ansible/ansible-modules-core/issues/2991
 #download non-quay images when no quay username provided
