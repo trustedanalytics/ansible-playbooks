@@ -24,6 +24,8 @@
     no_proxy: "{{no_proxy}},{{ item }}"
   with_items:
     - "{{ bosh_ip }}"
+    - "{{ docker_ip }}"
+    - "{{ nats_ip }}"
     - 127.0.0.1
     - localhost
     - .consul

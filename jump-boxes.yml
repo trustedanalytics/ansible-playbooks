@@ -123,10 +123,6 @@
       set_fact: bosh_default_key_name={{ key_name | mandatory }}
                 bosh_private_key={{ user_result.ssh_key_file | default('/root/.ssh/id_rsa') }}
 
-    - name: Set no_proxy for internal addresses
-      set_fact:
-         internal_no_proxy: "{{ bosh_ip }},{{ docker_ip }},{{ nats_ip }}"
-
     - include: proxy.yml
 
 - name: Install BOSH
