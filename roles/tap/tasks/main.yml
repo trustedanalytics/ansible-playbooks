@@ -121,7 +121,13 @@
     docker_plans: "{{ docker_manifest.properties.broker.services }}"
 
 #docker_login doesnt support setting the api version, have to log in using client
-- apt: name=docker.io state=installed
+- apt_key: keyserver=p80.pool.sks-keyservers.net id=58118E89F3A912897C070ADBF76221572C52609D
+
+- apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
+
+- apt: name=docker.io state=absent
+
+- apt: name=docker-engine=1.9.0-0~trusty state=present
 
 - copy: dest=/etc/profile.d/docker.sh content="export DOCKER_HOST={{ docker_url }}"
 
