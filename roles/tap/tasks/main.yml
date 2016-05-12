@@ -142,7 +142,7 @@
 - set_fact:
     quay_io_username: ""
     quay_io_password: ""
-  when: docker_login.failed
+  when: docker_login|failed
 
 #docker_image doesn't work for downloading images only: https://github.com/ansible/ansible-modules-core/issues/2991
 #download non-quay images when no quay username provided
