@@ -22,8 +22,6 @@ networks:
       subnet: {{ cf_private_subnet_id }}
 {% elif  (provider == 'openstack') %}
       net_id: {{ cf_private_subnet_id }}
-      security_groups:
-        - {{ cf_private_security_group }}
 {% endif %}
 
 - name: cf_public
