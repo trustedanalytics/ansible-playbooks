@@ -183,10 +183,10 @@
           - proxy_set_header Connection "upgrade"
           - proxy_set_header X-Forwarded-Proto $scheme
   environment:
-    no_proxy: "{{ no_proxy }}"
-    http_proxy: "{{ http_proxy }}"
-    https_proxy: "{{ https_proxy }}"
-    ftp_proxy: "{{ ftp_proxy }}"
+    no_proxy: "{{ no_proxy | default() }}"
+    http_proxy: "{{ http_proxy | default() }}"
+    https_proxy: "{{ https_proxy | default() }}"
+    ftp_proxy: "{{ ftp_proxy | default() }}"
   post_tasks:
     - name: Singnal the NGINX wait condition handle
       command: cfn-signal -s true -r 'NGINX installed and configured.' {{ nginx_wait_condition_handle }}
