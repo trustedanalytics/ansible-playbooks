@@ -15,18 +15,6 @@
 
 ---
 
-# BOSH OpenStack CPI Release
-
-bosh_cpi_release_version: 24
-bosh_cpi_release_url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-openstack-cpi-release?v={{ bosh_cpi_release_version }}
-bosh_cpi_release_sha1: 6621ee1326e7136d9dbebacd1158d101618dc719
-
-# BOSH Stemcell
-bosh_stemcell_sha1: 0e0f48f064663b13990c77092e265ae185db1db2
-bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-openstack-kvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
-
-bosh_instance_type: m1.large
-
 # CF
 cf_small_z1_instance_type: m1.large
 cf_compilation_z1_instance_type: m1.large
@@ -53,3 +41,5 @@ cf_stemcell: http://bihal.sclab.intel.com/bosh-stemcell-3104-openstack-kvm-ubunt
 # Docker
 docker_instance_type: m1.xlarge
 docker_errand_instance_type: m1.medium
+
+# vi:et:sw=2 ts=2 sts=2 ft=ansible

@@ -15,17 +15,6 @@
 
 ---
 
-# BOSH AWS CPI Release
-bosh_cpi_release_version: 39
-bosh_cpi_release_sha1: ef97bfaff05989ab006e88d28763feb8fbb32d45
-bosh_cpi_release_url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-aws-cpi-release?v={{ bosh_cpi_release_version }}
-
-# BOSH Stemcell
-bosh_stemcell_sha1: 624c3ea55cbdb7143ffecf36d7e8c0275926a824
-bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
-
-bosh_instance_type: m3.medium
-
 # CF
 cf_small_z1_instance_type: c3.large
 cf_compilation_z1_instance_type: c3.large
@@ -44,3 +33,5 @@ cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bos
 # Docker
 docker_instance_type: m3.xlarge
 docker_errand_instance_type: m3.medium
+
+# vi:et:sw=2 ts=2 sts=2 ft=ansible
