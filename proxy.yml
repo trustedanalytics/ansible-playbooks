@@ -29,6 +29,7 @@
     - 127.0.0.1
     - localhost
     - .consul
+  when: "{{ no_proxy|length > 1 }}"
 - file:
     path: /etc/profile.d/proxy.sh
     owner: root

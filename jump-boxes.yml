@@ -147,10 +147,6 @@
         - bosh_admin_password
         - bosh_hm_password
         - bosh_mbus_password
-#    - block:
-#      when: provider == 'aws'
-#    - block:
-#      when: provider == 'openstack'
   roles:
     - { role: rvm_io.rvm1-ruby, become: yes }
     - role: bosh
@@ -189,14 +185,6 @@
         - cf_login_client_secret
         - cf_notifications_client_secret
         - cf_uaadb_user_password
-#    - block:
-#      when: provider == 'aws'
-#    - block:
-#      # TODO: router stuff
-#      - debug: var=cf_private_cidr
-#      - debug: var=cf_public_cidr
-#      - debug: var=docker_cidr
-#      when: provider == 'openstack'
   # TODO: Create generic role for BOSH deployment.
   roles:
     - role: tap
