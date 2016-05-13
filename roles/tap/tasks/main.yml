@@ -65,10 +65,10 @@
       --secret {{ cf_password }}
     - >-
       uaac client add tap_console
-      --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,console.admin,doppler.firehose,openid,password.write,scim.read,scim.userids,scim.write,clients.write
+      --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,console.admin,doppler.firehose,openid,password.write,scim.read,scim.userids,scim.write
       --authorized_grant_types authorization_code,client_credentials,refresh_token
       --redirect_uri http://console.{{ cf_system_domain }}/oauth/callback,https://console.{{ cf_system_domain }}/oauth/callback
-      --authorities scim.read,uaa.admin,cloud_controller.admin,billing.admin,uaa.resource,password.write,scim.write,cloud_controller.write,cloud_controller.read
+      --authorities scim.read,uaa.admin,cloud_controller.admin,billing.admin,uaa.resource,password.write,scim.write,cloud_controller.write,cloud_controller.read,clients.write
       --autoapprove true
       --access_token_validity 1209600
       --refresh_token_validity 1209600
