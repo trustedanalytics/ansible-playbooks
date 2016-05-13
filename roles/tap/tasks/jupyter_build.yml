@@ -32,7 +32,12 @@
 # - Pulling all images is hardcoded in Ansible 2.0, this prevents the build of jupyter
 #   since it uses jupyter-base which is available only locally (this changes in 2.1)
 
-- shell: "docker build --tag=quay.io/trustedanalytics/{{ item }} ."
+- shell: >-
+    docker build
+    --build-arg http_proxy={{ http_proxy }}
+    --build-arg https_proxy={{ https_proxy }}
+    --build-arg no_proxy={{ no_proxy }}
+    --tag=quay.io/trustedanalytics/{{ item }} .
   environment:
     DOCKER_HOST: "{{ docker_url }}"
   args:

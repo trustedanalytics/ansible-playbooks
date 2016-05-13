@@ -66,11 +66,7 @@ jobs:
   - {name: director, release: bosh}
   - {name: health_monitor, release: bosh}
   - {name: registry, release: bosh}
-{% if (provider == 'aws') %}
-  - {name: aws_cpi, release: bosh-aws-cpi}
-{% elif  (provider == 'openstack') %}
-  - {name: openstack_cpi, release: bosh-openstack-cpi}
-{% endif %}
+  - {name: {{ provider }}_cpi, release: bosh-{{ provider }}-cpi}
 
   resource_pool: vms
   persistent_disk_pool: disks
@@ -183,11 +179,7 @@ cloud_provider:
   mbus: "https://mbus:{{ bosh_mbus_password }}@{{ bosh_elastic_ip if bosh_elastic_ip is not none else bosh_ip }}:6868" # <--- Replace with Elastic IP
 
   properties:
-{% if (provider == 'aws') %}
-    aws: *aws
-{% elif  (provider == 'openstack') %}
-    openstack: *openstack
-{% endif %}
+    {{ provider }}: *{{ provider }}
     agent: {mbus: "https://mbus:{{ bosh_mbus_password }}@0.0.0.0:6868"}
     blobstore: {provider: local, path: /var/vcap/micro_bosh/data/cache}
     ntp: *ntp
