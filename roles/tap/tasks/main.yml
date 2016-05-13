@@ -159,7 +159,10 @@
 - pip: name=docker-py version=1.8.1
 
 - set_fact:
-    docker_manifest: "{{ lookup('file', 'templates/docker-broker.yml.j2') | from_yaml }}"
+    docker_manifest_file: "{{ ansible_env['HOME'] }}/docker-broker.yml"
+
+- set_fact:
+    docker_manifest: "{{ lookup('file', docker_manifest_file) | from_yaml }}"
 
 - set_fact:
     docker_plans: "{{ docker_manifest.properties.broker.services }}"
