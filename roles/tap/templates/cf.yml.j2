@@ -57,7 +57,7 @@ resource_pools:
     instance_type: {{ cf_runner_z1_instance_type }}
 
 compilation:
-  workers: 6
+  workers: 4
   network: cf_private
   reuse_compilation_vms: true
   cloud_properties:
@@ -134,12 +134,19 @@ jobs:
   - {name: cloud_controller_clock, release: cf}
   - {name: metron_agent, release: cf}
   - {name: nfs_mounter, release: cf}
+  - {name: route_registrar, release: cf}
   networks:
   - name: cf_private
   properties:
     nfs_server:
       address: {{ cf_private_subnet.cidr_block | nthhost(8) }}
       allow_from_entries: [{{ cf_private_subnet.cidr_block }}]
+    route_registrar:
+      routes:
+      - name: api
+        port: 9022
+        uris:
+        - "api.{{ cf_system_domain }}"
 
 - name: hm9000_z1
   instances: 1
@@ -147,8 +154,16 @@ jobs:
   templates:
   - {name: hm9000, release: cf}
   - {name: metron_agent, release: cf}
+  - {name: route_registrar, release: cf}
   networks:
   - name: cf_private
+  properties:
+    route_registrar:
+      routes:
+      - name: hm9000
+        port: 5155
+        uris:
+        - "hm9000.{{ cf_system_domain }}"
 
 - name: doppler_z1
   instances: 1
@@ -168,22 +183,43 @@ jobs:
   templates:
   - {name: loggregator_trafficcontroller, release: cf}
   - {name: metron_agent, release: cf}
+  - {name: route_registrar, release: cf}
   networks:
   - name: cf_private
   properties:
     traffic_controller: {zone: z1}
+    route_registrar:
+      routes:
+      - name: doppler
+        port: 8081
+        uris:
+        - "doppler.{{ cf_system_domain }}"
+      - name: loggregator
+        port: 8080
+        uris:
+          - "loggregator.{{ cf_system_domain }}"
 
-- name: login_z1
+- name: uaa_z1
   instances: 1
   resource_pool: small_z1
   templates:
   - {name: uaa-intel, release: uaa-intel}
   - {name: metron_agent, release: cf}
+  - {name: route_registrar, release: cf}
   networks:
   - name: cf_private
   properties:
     login:
       catalina_opts: -Xmx768m -XX:MaxPermSize=256m
+    route_registrar:
+      routes:
+      - name: uaa
+        port: 8080
+        uris:
+        - "uaa.{{ cf_system_domain }}"
+        - "*.uaa.{{ cf_system_domain }}"
+        - "login.{{ cf_system_domain }}"
+        - "*.login.{{ cf_system_domain }}"
     uaa:
       admin:
         client_secret: {{ cf_password }}
@@ -245,7 +281,6 @@ properties:
   app_domains: [{{ cf_system_domain }}]
   cc:
     allow_app_ssh_access: false
-    billing_event_writing_enabled: false
     broker_client_timeout_seconds: 900
     bulk_api_password: {{ cf_password }}
     db_encryption_key: {{ cf_password }}
@@ -309,14 +344,22 @@ properties:
   domain: {{ cf_system_domain }}
   etcd:
     machines: [{{ cf_private_subnet.cidr_block | nthhost(7) }}]
+    peer_require_ssl: false
+    require_ssl: false
   hm9000:
     url: http://hm9000.{{ cf_system_domain }}
   logger_endpoint:
     port: 4443
+  loggregator:
+    etcd:
+      machines: [{{ cf_private_subnet.cidr_block | nthhost(7) }}]
   loggregator_endpoint:
     shared_secret: {{ cf_password }}
   login:
     asset_base_url: /resources/trustedanalytics
+    branding:
+      company_name: Trusted Analytics Platform
+    home_redirect: https://console.{{ cf_system_domain }}
     links:
       home: http://console.{{ cf_system_domain }}
       passwd: http://login.{{ cf_system_domain }}/forgot_password
@@ -329,11 +372,6 @@ properties:
       port: {{ cf_smtp_port }}
       senderEmail: {{ cf_smtp_sender_email }}
       senderName: {{ cf_smtp_sender_name }}
-    tiles:
-    - image: /resources/trustedanalytics/images/console.png
-      image-hover: /resources/trustedanalytics/images/console.png
-      login-link: https://console.{{ cf_system_domain }}
-      name: Developer console
   metron_agent:
     zone: z1
     deployment: minimal-aws
@@ -368,6 +406,10 @@ properties:
         authorized-grant-types: client_credentials
         id: cloud_controller_username_lookup
         secret: {{ cf_password }}
+      cc_routing:
+        authorities: routing.router_groups.read
+        secret: {{ cf_password }}
+        authorized-grant-types: client_credentials
       gorouter:
         authorities: clients.read,clients.write,clients.admin,routing.routes.write,routing.routes.read
         authorized-grant-types: client_credentials,refresh_token

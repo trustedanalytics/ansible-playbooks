@@ -15,6 +15,9 @@
 
 ---
 
+- git: repo=https://github.com/trustedanalytics/uaa-intel-boshrelease.git
+       dest={{ ansible_env['HOME'] }}/uaa-intel-boshrelease recursive=no
+
 - shell: bosh --no-color -n upload release {{ item }}
   register: shell_result
   changed_when: shell_result.stdout | search('Release uploaded')
@@ -22,7 +25,7 @@
   with_items:
     - https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
     - https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
-    - https://repo.gotapaas.eu/files/uaa-intel-4.tgz
+    - "{{ ansible_env['HOME'] }}/uaa-intel-boshrelease/releases/uaa-intel/uaa-intel-5.yml"
 
 - shell: bosh --no-color -n upload stemcell https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
   register: shell_result
@@ -65,12 +68,21 @@
       --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,console.admin,doppler.firehose,openid,password.write,scim.read,scim.userids,scim.write
       --authorized_grant_types authorization_code,client_credentials,refresh_token
       --redirect_uri http://console.{{ cf_system_domain }}/oauth/callback,https://console.{{ cf_system_domain }}/oauth/callback
-      --authorities scim.read,uaa.admin,cloud_controller.admin,billing.admin,uaa.resource,password.write,scim.write,cloud_controller.write,cloud_controller.read
+      --authorities scim.read,uaa.admin,cloud_controller.admin,billing.admin,uaa.resource,password.write,scim.write,cloud_controller.write,cloud_controller.read,clients.write
       --autoapprove true
       --access_token_validity 1209600
       --refresh_token_validity 1209600
       --secret {{ cf_password }}
     - uaac client update cf --scope cloud_controller.admin,cloud_controller.read,cloud_controller.write,doppler.firehose,openid,password.write,scim.read,scim.write,console.admin
+    - uaac group add hue.admin
+    - >-
+      uaac client add hue
+      --scope hue.admin,scim.read,scim.userids,uaa.user
+      --authorized_grant_types authorization_code,refresh_token
+      --authorities uaa.user,oauth.login
+      --redirect_uri http://hue.{{ cf_system_domain }}/oauth/callback
+      --autoapprove true
+      --secret {{ cf_password }}
 
 - shell: uaac clients
   register: shell_result
@@ -103,27 +115,73 @@
   environment:
     AWS_DEFAULT_REGION: "{{ region | mandatory }}"
 
-- pip: name=docker-py version=1.1.0
+- pip: name=docker-py version=1.8.1
 
-# TODO: Pull all Docker images and disable fetching
-# in Containers Service Broker.
-# SEE: https://github.com/ansible/ansible-modules-core/issues/2991
+- set_fact:
+    docker_manifest: "{{ lookup('file', 'templates/docker-broker.yml.j2') | from_yaml }}"
+
+- set_fact:
+    docker_plans: "{{ docker_manifest.properties.broker.services }}"
+
+#docker_login doesnt support setting the api version, have to log in using client
+- apt_key: keyserver=p80.pool.sks-keyservers.net id=58118E89F3A912897C070ADBF76221572C52609D
+
+- apt_repository: repo='deb https://apt.dockerproject.org/repo ubuntu-trusty main' state=present
+
+- apt: name=docker.io state=absent
+
+- apt: name=docker-engine=1.9.0-0~trusty state=present
+
+- copy: dest=/etc/profile.d/docker.sh content="export DOCKER_HOST={{ docker_url }}"
+
+- shell: "docker login -u {{ quay_io_username }} -p {{ quay_io_password }} -e test@test quay.io"
+  ignore_errors: True
+  register: docker_login
+  environment:
+    DOCKER_HOST: "{{ docker_url }}"
+  when: quay_io_username and quay_io_password
+
+#fallback to building images when cannot login into quay
+- set_fact:
+    quay_io_username: ""
+    quay_io_password: ""
+  when: docker_login|failed
+
+#docker_image doesn't work for downloading images only: https://github.com/ansible/ansible-modules-core/issues/2991
+#download non-quay images when no quay username provided
+- shell: "docker pull {{ item.plans[0].container.image }}:{{ item.plans[0].container.tag }}"
+  environment:
+    DOCKER_HOST: "{{ docker_url }}"
+  register: shell_result
+  changed_when: not shell_result.stdout | search("Image is up to date")
+  with_items: "{{ docker_plans }}"
+  when: (not quay_io_username or not quay_io_password) and not "quay" in item.plans[0].container.image
+
+#download all images when quay username provided
+- shell: "docker pull {{ item.plans[0].container.image }}:{{ item.plans[0].container.tag }}"
+  environment:
+    DOCKER_HOST: "{{ docker_url }}"
+  register: shell_result
+  changed_when: not shell_result.stdout | search("Image is up to date")
+  with_items: "{{ docker_plans }}"
+  when: quay_io_username and quay_io_password
 
 - docker:
     name: registrator
     image: gliderlabs/registrator:v6
-    memory_limit: 256MB
+    memory_limit: 256000000
     command: -resync 3600 -ip {{ docker_ip }} consul://cdh-master-0.node.consul:8080
     volumes:
       - /var/vcap/data/sys/run/docker:/tmp/docker
     env:
       DOCKER_HOST: unix:///tmp/docker/docker.sock
+    docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
 
 - docker:
     name: registry
     image: registry:2.4.0
-    memory_limit: 1GB
+    memory_limit: 1024000000
     ports:
     - 5000:5000
     env:
@@ -131,12 +189,13 @@
       SETTINGS_FLAVOR: local
     volumes:
     - /var/vcap/data/registry:/registry
+    docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
 
 - docker:
     name: h2oprovisioner
     image: quay.io/trustedanalytics/h2o-provisioner
-    memory_limit: 1GB
+    memory_limit: 1024000000
     ports:
       - 9876:8080
       - 54310:54310
@@ -157,10 +216,10 @@
       KRB_REALM: CLOUDERA
       KRB_USER: cf
       KRB_PASSWORD: cf1
+    docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
-    registry: quay.io
-    username: "{{ quay_io_username }}"
-    password: "{{ quay_io_password }}"
   when: quay_io_username and quay_io_password
+
+- include: jupyter_build.yml
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

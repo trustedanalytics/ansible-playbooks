@@ -46,6 +46,7 @@
       nginx_official_repo: True
       nginx_official_repo_mainline: True
       nginx_http_params:
+        - server_names_hash_bucket_size 128
         - sendfile on
         - access_log /var/log/nginx/access.log
         - error_log /var/log/nginx/error.log warn
