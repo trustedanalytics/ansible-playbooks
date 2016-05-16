@@ -25,7 +25,6 @@ cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
 
 cf_releases:
   docker: https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
-  uaa: https://repo.gotapaas.eu/files/uaa-intel-4.tgz
   cf: https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
 
 cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
