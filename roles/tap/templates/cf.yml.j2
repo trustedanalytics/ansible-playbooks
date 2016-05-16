@@ -382,7 +382,7 @@ properties:
       senderName: {{ cf_smtp_sender_name }}
   metron_agent:
     zone: z1
-    deployment: minimal-aws
+    deployment: minimal-{{ provider }}
   metron_endpoint:
     shared_secret: {{ cf_password }}
   nats:
