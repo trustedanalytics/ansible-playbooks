@@ -159,9 +159,12 @@
     https_proxy: "{{ https_proxy }}"
     ftp_proxy: "{{ ftp_proxy }}"
   post_tasks:
-    - name: Signal the BOSH Director wait condition handle
+    - name: Signal the BOSH Director wait condition handle for AWS
       command: cfn-signal -s true -r 'BOSH Director deployed.' {{ bosh_director_wait_condition_handle }}
       when: bosh_director_wait_condition_handle and provider == 'aws'
+    - name: Signal the BOSH Director wait condition handle for OpenStack
+      command: "{{ bosh_director_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: bosh_director_wait_condition_handle and provider == 'openstack'
 
 - name: Deploy Trusted Analytics Platform
   hosts: jump-boxes
@@ -199,11 +202,17 @@
     https_proxy: "{{ https_proxy }}"
     ftp_proxy: "{{ ftp_proxy }}"
   post_tasks:
-    - name: Signal the Cloud Foundry wait condition handle
+    - name: Signal the Cloud Foundry wait condition handle for AWS
       command: cfn-signal -s true -r 'Cloud Foundry deployed.' {{ cf_wait_condition_handle }}
       when: cf_wait_condition_handle and provider == 'aws'
-    - name: Signal the Docker Broker wait condition handle
+    - name: Signal the Docker Broker wait condition handle for AWS
       command: cfn-signal -s true -r 'Docker Broker deployed.' {{ docker_broker_wait_condition_handle }}
       when: docker_broker_wait_condition_handle and provider == 'aws'
+    - name: Signal the Cloud Foundry wait condition handle for OpenStack
+      command: "{{ cf_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: cf_wait_condition_handle and provider == 'openstack'
+    - name: Signal the Docker Broker wait condition handle for OpenStack
+      command: "{{ docker_broker_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: docker_broker_wait_condition_handle and provider == 'openstack'
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

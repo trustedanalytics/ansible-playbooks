@@ -188,8 +188,12 @@
     https_proxy: "{{ https_proxy | default() }}"
     ftp_proxy: "{{ ftp_proxy | default() }}"
   post_tasks:
-    - name: Singnal the NGINX wait condition handle
+    - name: Singnal the NGINX wait condition handle for AWS
       command: cfn-signal -s true -r 'NGINX installed and configured.' {{ nginx_wait_condition_handle }}
       when: nginx_wait_condition_handle and provider == 'aws'
+    - name: Singnal the NGINX wait condition handle for Openstack
+      command: "{{ nginx_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: nginx_wait_condition_handle and provider == 'openstack'
+
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
