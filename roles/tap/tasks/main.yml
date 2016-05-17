@@ -193,21 +193,25 @@
 
 #docker_image doesn't work for downloading images only: https://github.com/ansible/ansible-modules-core/issues/2991
 #download non-quay images when no quay username provided
-- shell: "docker pull {{ item.plans[0].container.image }}:{{ item.plans[0].container.tag }}"
+- shell: "docker pull {{ item.1.container.image }}:{{ item.1.container.tag }}"
   environment:
     DOCKER_HOST: "{{ docker_url }}"
   register: shell_result
   changed_when: not shell_result.stdout | search("Image is up to date")
-  with_items: "{{ docker_plans }}"
+  with_subelements:
+    - "{{ docker_plans }}"
+    - plans
   when: (not quay_io_username or not quay_io_password) and not "quay" in item.plans[0].container.image
 
 #download all images when quay username provided
-- shell: "docker pull {{ item.plans[0].container.image }}:{{ item.plans[0].container.tag }}"
+- shell: "docker pull {{ item.1.container.image }}:{{ item.1.container.tag }}"
   environment:
     DOCKER_HOST: "{{ docker_url }}"
   register: shell_result
   changed_when: not shell_result.stdout | search("Image is up to date")
-  with_items: "{{ docker_plans }}"
+  with_subelements:
+    - "{{ docker_plans }}"
+    - plans
   when: quay_io_username and quay_io_password
 
 - docker:
