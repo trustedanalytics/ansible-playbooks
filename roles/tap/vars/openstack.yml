@@ -1,0 +1,36 @@
+# Copyright (c) 2016 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+---
+
+# CF
+cf_small_z1_instance_type: m1.large
+cf_compilation_z1_instance_type: m1.large
+
+# CF Stemcell
+cf_bosh_stemcell_name: bosh-openstack-kvm-ubuntu-trusty-go_agent
+cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
+
+cf_releases:
+  docker: https://bosh.io/d/github.com/cf-platform-eng/docker-boshrelease?v={{ docker_release_version }}
+  cf: https://bosh.io/d/github.com/cloudfoundry/cf-release?v={{ cf_release_version }}
+
+cf_stemcell: https://bosh.io/d/stemcells/{{ cf_bosh_stemcell_name }}?v={{ cf_bosh_stemcell_version }}
+
+# Docker
+docker_instance_type: m1.xlarge
+docker_errand_instance_type: m1.medium
+
+# vi:et:sw=2 ts=2 sts=2 ft=ansible
