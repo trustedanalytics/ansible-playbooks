@@ -22,20 +22,38 @@
     docker_registry_user: admin
     ssl_certs_common_name: "{{ cf_system_domain }}"
   pre_tasks:
-    - ec2_vpc_subnet_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          subnet-id: "{{ cf_private_subnet_id | mandatory }}"
-      register: ec2_vpc_subnet_facts_result
-    - set_fact:
-        cf_private_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-    - ec2_vpc_subnet_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          subnet-id: "{{ docker_subnet_id | mandatory }}"
-      register: ec2_vpc_subnet_facts_result
-    - set_fact:
-        docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
+    - block:
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ cf_private_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          cf_private_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ docker_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          docker_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+      when: provider == 'aws'
+    - block:
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ cf_private_subnet_id | mandatory }}"
+      - set_fact:
+          cf_private_cidr: "{{ openstack_subnets[0].cidr }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ docker_subnet_id | mandatory }}"
+      - set_fact:
+          docker_cidr: "{{ openstack_subnets[0].cidr }}"
+      when: provider == 'openstack'
     - apt: name=python-passlib state=present
     - htpasswd: path=/etc/nginx/{{ auth_basic_user_file }}
                 name={{ docker_registry_user }}
@@ -155,8 +173,8 @@
                }
       nginx_configs:
         upstream:
-          - upstream api { server {{ cf_private_subnet.cidr_block | nthhost(5) }}:80; }
-          - upstream docker_registry { server {{ docker_subnet.cidr_block | nthhost(4) }}:5000; }
+          - upstream api { server {{ cf_private_cidr | nthhost(5) }}:80; }
+          - upstream docker_registry { server {{ docker_cidr | nthhost(4) }}:5000; }
         proxy:
           - proxy_set_header Host $host
           - proxy_set_header X-Forwarded-For $remote_addr
@@ -164,9 +182,18 @@
           - proxy_set_header Upgrade $http_upgrade
           - proxy_set_header Connection "upgrade"
           - proxy_set_header X-Forwarded-Proto $scheme
+  environment:
+    no_proxy: "{{ no_proxy | default() }}"
+    http_proxy: "{{ http_proxy | default() }}"
+    https_proxy: "{{ https_proxy | default() }}"
+    ftp_proxy: "{{ ftp_proxy | default() }}"
   post_tasks:
-    - name: Singnal the NGINX wait condition handle
+    - name: Singnal the NGINX wait condition handle for AWS
       command: cfn-signal -s true -r 'NGINX installed and configured.' {{ nginx_wait_condition_handle }}
-      when: nginx_wait_condition_handle
+      when: nginx_wait_condition_handle and provider == 'aws'
+    - name: Singnal the NGINX wait condition handle for Openstack
+      command: "{{ nginx_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: nginx_wait_condition_handle and provider == 'openstack'
+
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

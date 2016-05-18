@@ -1,4 +1,4 @@
-# Copyright (c) 2015 Intel Corporation
+# Copyright (c) 2016 Intel Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,21 +15,15 @@
 
 ---
 
-- hosts: all
-  tasks:
-    - block:
-      - ec2_facts:
-      - set_fact:
-          stack: "{{ lookup('ini', 'stack section=main file=/etc/cfn/cfn-hup.conf') }}"
-          region: "{{ lookup('ini', 'region section=main file=/etc/cfn/cfn-hup.conf') }}"
-      when: provider == 'aws'
+# BOSH AWS CPI Release
+bosh_cpi_release_version: 39
+bosh_cpi_release_sha1: ef97bfaff05989ab006e88d28763feb8fbb32d45
+bosh_cpi_release_url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-aws-cpi-release?v={{ bosh_cpi_release_version }}
 
-- hosts: all
-  roles:
-    - common
+# BOSH Stemcell
+bosh_stemcell_sha1: 624c3ea55cbdb7143ffecf36d7e8c0275926a824
+bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
 
-- include: jump-boxes.yml
-
-- include: nginx.yml
+bosh_instance_type: m3.medium
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

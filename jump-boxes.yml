@@ -21,22 +21,109 @@
     - name: Signal the key name wait condition handle
       command: cfn-signal -s true -r 'The public key file imported.' {{ key_name_wait_condition_handle }}
   tasks:
-    - name: Create the RSA Key Pair
-      user: name={{ ansible_user_id }} generate_ssh_key=yes
-      register: user_result
-    - name: Import the public key to Amazon EC2
-      ec2_key:
-        name: "{{ key_name | mandatory }}"
-        key_material: "{{ user_result.ssh_public_key }}"
-        region: "{{ region | mandatory }}"
-        wait: yes
-        state: present
-      notify:
-        - Signal the key name wait condition handle
-    - meta: flush_handlers
+    - block:
+      - name: Create the RSA Key Pair
+        user: name={{ ansible_user_id }} generate_ssh_key=yes
+        register: user_result
+      - name: Import the public key to Amazon EC2
+        ec2_key:
+          name: "{{ key_name | mandatory }}"
+          key_material: "{{ user_result.ssh_public_key }}"
+          region: "{{ region | mandatory }}"
+          wait: yes
+          state: present
+        notify:
+          - Signal the key name wait condition handle
+      - meta: flush_handlers
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ bosh_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          bosh_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          bosh_availability_zone: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ cf_private_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          cf_private_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          cf_private_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ cf_public_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          cf_public_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          cf_public_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_subnet_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            subnet-id: "{{ docker_subnet_id | mandatory }}"
+        register: ec2_vpc_subnet_facts_result
+      - set_fact:
+          docker_cidr: "{{ ec2_vpc_subnet_facts_result.subnets[0].cidr_block }}"
+          docker_az: "{{ ec2_vpc_subnet_facts_result.subnets[0].availability_zone }}"
+      - ec2_vpc_route_table_facts:
+          region: "{{ region | mandatory }}"
+          filters:
+            association.subnet-id: "{{ docker_subnet_id | mandatory }}"
+        register: ec2_vpc_route_table_facts_result
+      - set_fact:
+          private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
+      when: provider == 'aws'
+
+    - block:
+      - name: Set OpenStack cedentials
+        set_fact:
+          openstack: "{{ lookup('file', '/etc/openstack/clouds.yaml') | from_yaml }}"
+      - os_subnets_facts:
+          cloud: TAP
+          filters:
+            network_id: "{{ bosh_subnet_id | mandatory }}"
+      - set_fact:
+          bosh_cidr: "{{ openstack_subnets[0].cidr }}"
+          bosh_availability_zone: "{{ availability_zone }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ cf_private_subnet_id | mandatory }}"
+      - set_fact:
+          cf_private_cidr: "{{ openstack_subnets[0].cidr }}"
+          cf_private_az: "{{ availability_zone }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ cf_public_subnet_id | mandatory }}"
+      - set_fact:
+          cf_public_cidr: "{{ openstack_subnets[0].cidr }}"
+          cf_public_az: "{{ availability_zone }}"
+      - os_subnets_facts:
+          cloud: TAP
+          region_name: "{{ region | mandatory }}"
+          filters:
+            network_id: "{{ docker_subnet_id | mandatory }}"
+      - set_fact:
+          docker_cidr: "{{ openstack_subnets[0].cidr }}"
+          docker_az: "{{ availability_zone }}"
+      when: provider == 'openstack'
+
+    - name: Set facts with IP of internal services
+      set_fact:
+          bosh_ip: "{{ bosh_cidr | nthhost(4) }}"
+          docker_ip: "{{ docker_cidr | nthhost(4) }}"
+          nats_ip: "{{ cf_private_cidr | nthhost(6) }}"
+
     - name: Set the key pair used by BOSH
       set_fact: bosh_default_key_name={{ key_name | mandatory }}
-                bosh_private_key={{ user_result.ssh_key_file }}
+                bosh_private_key={{ user_result.ssh_key_file | default('/root/.ssh/id_rsa') }}
+
+    - include: proxy.yml
 
 - name: Install BOSH
   hosts: jump-boxes
@@ -60,13 +147,6 @@
         - bosh_admin_password
         - bosh_hm_password
         - bosh_mbus_password
-    - ec2_vpc_subnet_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          subnet-id: "{{ bosh_subnet_id | mandatory }}"
-      register: ec2_vpc_subnet_facts_result
-    - set_fact:
-        bosh_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
   roles:
     - { role: rvm_io.rvm1-ruby, become: yes }
     - role: bosh
@@ -74,10 +154,17 @@
       bosh_region: "{{ region | mandatory }}"
   environment:
     PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
+    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    ftp_proxy: "{{ ftp_proxy }}"
   post_tasks:
-    - name: Signal the BOSH Director wait condition handle
+    - name: Signal the BOSH Director wait condition handle for AWS
       command: cfn-signal -s true -r 'BOSH Director deployed.' {{ bosh_director_wait_condition_handle }}
-      when: bosh_director_wait_condition_handle
+      when: bosh_director_wait_condition_handle and provider == 'aws'
+    - name: Signal the BOSH Director wait condition handle for OpenStack
+      command: "{{ bosh_director_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: bosh_director_wait_condition_handle and provider == 'openstack'
 
 - name: Deploy Trusted Analytics Platform
   hosts: jump-boxes
@@ -101,34 +188,6 @@
         - cf_login_client_secret
         - cf_notifications_client_secret
         - cf_uaadb_user_password
-    - ec2_vpc_subnet_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          subnet-id: "{{ cf_private_subnet_id | mandatory }}"
-      register: ec2_vpc_subnet_facts_result
-    - set_fact:
-        cf_private_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-    - ec2_vpc_subnet_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          subnet-id: "{{ cf_public_subnet_id | mandatory }}"
-      register: ec2_vpc_subnet_facts_result
-    - set_fact:
-        cf_public_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-    - ec2_vpc_subnet_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          subnet-id: "{{ docker_subnet_id | mandatory }}"
-      register: ec2_vpc_subnet_facts_result
-    - set_fact:
-        docker_subnet: "{{ ec2_vpc_subnet_facts_result.subnets | first }}"
-    - ec2_vpc_route_table_facts:
-        region: "{{ region | mandatory }}"
-        filters:
-          association.subnet-id: "{{ docker_subnet_id | mandatory }}"
-      register: ec2_vpc_route_table_facts_result
-    - set_fact:
-        private_route_table: "{{ ec2_vpc_route_table_facts_result.route_tables | first }}"
   # TODO: Create generic role for BOSH deployment.
   roles:
     - role: tap
@@ -136,14 +195,24 @@
       cf_dns: "{{ bosh_dns }}"
       cf_bosh_security_group: "{{ bosh_default_security_groups | first }}"
       cf_bosh_stemcell_version: "{{ bosh_stemcell_version }}"
-  post_tasks:
-    - name: Signal the Cloud Foundry wait condition handle
-      command: cfn-signal -s true -r 'Cloud Foundry deployed.' {{ cf_wait_condition_handle }}
-      when: cf_wait_condition_handle
-    - name: Signal the Docker Broker wait condition handle
-      command: cfn-signal -s true -r 'Docker Broker deployed.' {{ docker_broker_wait_condition_handle }}
-      when: docker_broker_wait_condition_handle
   environment:
     PATH: "{{ rvm1_install_path }}/gems/{{ rvm1_rubies | last }}/bin:{{ ansible_env.PATH }}"
+    no_proxy: "{{ no_proxy }}"
+    http_proxy: "{{ http_proxy }}"
+    https_proxy: "{{ https_proxy }}"
+    ftp_proxy: "{{ ftp_proxy }}"
+  post_tasks:
+    - name: Signal the Cloud Foundry wait condition handle for AWS
+      command: cfn-signal -s true -r 'Cloud Foundry deployed.' {{ cf_wait_condition_handle }}
+      when: cf_wait_condition_handle and provider == 'aws'
+    - name: Signal the Docker Broker wait condition handle for AWS
+      command: cfn-signal -s true -r 'Docker Broker deployed.' {{ docker_broker_wait_condition_handle }}
+      when: docker_broker_wait_condition_handle and provider == 'aws'
+    - name: Signal the Cloud Foundry wait condition handle for OpenStack
+      command: "{{ cf_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: cf_wait_condition_handle and provider == 'openstack'
+    - name: Signal the Docker Broker wait condition handle for OpenStack
+      command: "{{ docker_broker_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
+      when: docker_broker_wait_condition_handle and provider == 'openstack'
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
