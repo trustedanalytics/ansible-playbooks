@@ -21,6 +21,10 @@ update:
   serial: false
 
 networks:
+{% if docker_fp is defined %}
+  - name: floating
+    type: vip
+{% endif %}
   - name: default
     type: manual
     subnets:
@@ -69,6 +73,11 @@ jobs:
         default: [dns, gateway]
         static_ips:
           - "{{ docker_ip }}"
+{% if docker_fp is defined %}
+      - name: floating
+        static_ips:
+          - "{{ docker_fp }}"
+{% endif %}
 
   - name: fetch-containers-images
     template: fetch-containers-images
