@@ -20,7 +20,7 @@
   vars:
     auth_basic_user_file: conf/htpasswd
     docker_registry_user: admin
-    ssl_certs_common_name: "{{ cf_system_domain }}"
+    ssl_certs_common_name: "*.{{ cf_system_domain }}"
   pre_tasks:
     - block:
       - ec2_vpc_subnet_facts:
