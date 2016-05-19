@@ -201,7 +201,7 @@
   with_subelements:
     - "{{ docker_plans }}"
     - plans
-  when: (not quay_io_username or not quay_io_password) and not "quay" in item.plans[0].container.image
+  when: (not quay_io_username or not quay_io_password) and not "quay" in item.1.container.image
 
 #download all images when quay username provided
 - shell: "docker pull {{ item.1.container.image }}:{{ item.1.container.tag }}"
