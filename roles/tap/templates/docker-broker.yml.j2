@@ -30,7 +30,7 @@ networks:
     subnets:
       - range: "{{ docker_cidr }}"
         gateway: "{{ docker_cidr | nthhost(1) }}"
-        dns: ["{{ cf_dns | join(', ') }}"]
+        dns: [{{ cf_dns | join(', ') }}]
         reserved: ["{{ docker_cidr | nthhost(2) }} - {{ docker_cidr | nthhost(3) }}"]
         static: ["{{ docker_ip }}"]
         cloud_properties:

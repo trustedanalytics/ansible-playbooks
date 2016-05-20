@@ -21,11 +21,6 @@
     - jupyter
   when: not quay_io_username or not quay_io_password
 
-- git:
-    repo: https://github.com/trustedanalytics/jupyter-default-notebooks.git
-    dest: "{{ ansible_env['HOME'] }}/jupyter/jupyter-default-notebooks"
-  when: not quay_io_username or not quay_io_password
-
 # TODO: Rewrite the following using native ansible modules
 # Reasons it can't be currently done:
 # - Build_args not supported (https://github.com/ansible/ansible-modules-core/issues/2408)
