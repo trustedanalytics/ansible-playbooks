@@ -7,3 +7,6 @@
 [submodule "roles/jdauphant.ssl-certs"]
 	path = roles/jdauphant.ssl-certs
 	url = https://github.com/jdauphant/ansible-role-ssl-certs.git
+[submodule "roles/griggheo.consul-template"]
+	path = roles/griggheo.consul-template
+	url = https://github.com/griggheo/ansible-consul-template.git
