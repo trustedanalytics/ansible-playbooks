@@ -18,6 +18,11 @@
 - name: Install and configure NGINX
   hosts: nginx
   vars:
+    consul_version: 0.6.3
+    consul_archive: consul_{{ consul_version }}_linux_amd64.zip
+    consul_download: https://releases.hashicorp.com/consul/{{ consul_version }}/{{ consul_archive }}
+    consul_join_at_start: true
+    consul_datacenter: envname
     auth_basic_user_file: conf/htpasswd
     docker_registry_user: admin
     ssl_certs_common_name: "*.{{ cf_system_domain }}"
@@ -188,6 +193,7 @@
                 name={{ docker_registry_user }}
                 password={{ docker_registry_password }}
   roles:
+    - savagegus.consul
     - jdauphant.ssl-certs
     - jdauphant.nginx
     - griggheo.consul-template

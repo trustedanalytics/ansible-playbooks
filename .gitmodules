@@ -10,3 +10,12 @@
 [submodule "roles/griggheo.consul-template"]
 	path = roles/griggheo.consul-template
 	url = https://github.com/griggheo/ansible-consul-template.git
+[submodule "roles/savagegus.consul"]
+	path = roles/savagegus.consul
+	url = https://github.com/savagegus/ansible-consul.git
+[submodule "roles/geerlingguy.repo-epel"]
+	path = roles/geerlingguy.repo-epel
+	url = https://github.com/geerlingguy/ansible-role-repo-epel.git
+[submodule "roles/franklinkim.nginx"]
+	path = roles/franklinkim.nginx
+	url = https://github.com/weareinteractive/ansible-nginx.git
