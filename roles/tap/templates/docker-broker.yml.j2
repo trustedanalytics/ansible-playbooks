@@ -63,8 +63,8 @@ resource_pools:
 jobs:
   - name: broker
     templates:
-      - name: docker
-      - name: cf-containers-broker
+    - { name: docker, release: docker}
+    - { name: cf-containers-broker, release: docker}
     instances: 1
     resource_pool: default
     persistent_disk: 65536
@@ -80,7 +80,8 @@ jobs:
 {% endif %}
 
   - name: fetch-containers-images
-    template: fetch-containers-images
+    templates:
+    - {name: fetch-containers-images, release: docker}
     instances: 1
     resource_pool: errand
     lifecycle: errand
@@ -88,7 +89,8 @@ jobs:
       - name: default
 
   - name: broker-registrar
-    template: broker-registrar
+    templates:
+    - {name: broker-registrar, release: docker}
     instances: 1
     resource_pool: errand
     lifecycle: errand
@@ -97,7 +99,8 @@ jobs:
         default: [dns, gateway]
 
   - name: broker-deregistrar
-    template: broker-deregistrar
+    templates:
+    - {name: broker-deregistrar, release: docker}
     instances: 1
     resource_pool: errand
     lifecycle: errand
