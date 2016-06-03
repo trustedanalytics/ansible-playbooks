@@ -260,7 +260,7 @@
       DRIVER_PORT_LOWER: 54310
       DRIVER_PORT_HIGHER: 54319
       DRIVER_IP: "{{ docker_ip }}"
-      KRB_KDC: cdh-manager-0.node.consul
+      KRB_KDC: cdh-master-2.node.consul
       KRB_REALM: CLOUDERA
       KRB_USER: cf
       KRB_PASSWORD: cf1
