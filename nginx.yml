@@ -22,6 +22,7 @@
     consul_archive: consul_{{ consul_version }}_linux_amd64.zip
     consul_download: https://releases.hashicorp.com/consul/{{ consul_version }}/{{ consul_archive }}
     consul_join_at_start: true
+    consul_retry_join: true
     consul_datacenter: envname
     auth_basic_user_file: conf/htpasswd
     docker_registry_user: admin
