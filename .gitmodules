@@ -19,3 +19,6 @@
 [submodule "roles/geerlingguy.nginx"]
 	path = roles/geerlingguy.nginx
 	url = https://github.com/geerlingguy/ansible-role-nginx.git
+[submodule "roles/franklinkim.nginx"]
+	path = roles/franklinkim.nginx
+	url = https://github.com/weareinteractive/ansible-nginx.git
