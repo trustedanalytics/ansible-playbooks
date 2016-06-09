@@ -194,6 +194,12 @@
     - htpasswd: path=/etc/nginx/{{ auth_basic_user_file }}
                 name={{ docker_registry_user }}
                 password={{ docker_registry_password }}
+    # Consul will be killed by Upstart, because savagegus.consul sets
+    # the respawn limit in job configuration file.
+    - name: Respawn the Consul job indefinitely
+      copy: dest=/etc/init/consul.override owner=root group=root mode=0644
+            content='respawn limit unlimited'
+      become: yes
   roles:
     - savagegus.consul
     - jdauphant.ssl-certs
