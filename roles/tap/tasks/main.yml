@@ -215,6 +215,8 @@
     name: registrator
     image: gliderlabs/registrator:v6
     memory_limit: 256000000
+    restart_policy: always
+    restart_policy_retry: 0
     command: -resync 3600 -ip {{ docker_ip }} consul://cdh-master-0.node.consul:8080
     volumes:
       - /var/vcap/data/sys/run/docker:/tmp/docker
@@ -227,6 +229,8 @@
     name: registry
     image: registry:2.4.0
     memory_limit: 1024000000
+    restart_policy: always
+    restart_policy_retry: 0
     ports:
     - 5000:5000
     env:
@@ -241,6 +245,8 @@
     name: h2oprovisioner
     image: quay.io/trustedanalytics/h2o-provisioner
     memory_limit: 1024000000
+    restart_policy: always
+    restart_policy_retry: 0
     ports:
       - 9876:8080
       - 54310:54310
