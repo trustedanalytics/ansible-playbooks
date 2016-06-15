@@ -16,6 +16,12 @@
 [submodule "roles/geerlingguy.repo-epel"]
 	path = roles/geerlingguy.repo-epel
 	url = https://github.com/geerlingguy/ansible-role-repo-epel.git
+[submodule "roles/geerlingguy.nginx"]
+	path = roles/geerlingguy.nginx
+	url = https://github.com/geerlingguy/ansible-role-nginx.git
 [submodule "roles/franklinkim.nginx"]
 	path = roles/franklinkim.nginx
 	url = https://github.com/weareinteractive/ansible-nginx.git
+[submodule "roles/joshualund.golang"]
+	path = roles/joshualund.golang
+	url = https://github.com/jlund/ansible-go.git

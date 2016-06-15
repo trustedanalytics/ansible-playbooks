@@ -24,6 +24,7 @@
     consul_join_at_start: true
     consul_retry_join: true
     consul_datacenter: envname
+    consul_install_nginx: false
     auth_basic_user_file: conf/htpasswd
     docker_registry_user: admin
     ssl_certs_common_name: "*.{{ cf_system_domain }}"
