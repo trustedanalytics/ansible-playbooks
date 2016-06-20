@@ -157,6 +157,9 @@
       - name: kubernetes-services.ctmpl
         dest: "{{ nginx_conf_dir }}/conf.d/stream/kubernetes-services.conf"
         cmd: service nginx reload
+      - name: mosquitto-services.ctmpl
+        dest: "{{ nginx_conf_dir }}/conf.d/stream/mosquitto-services.conf"
+        cmd: service nginx reload
   pre_tasks:
     - block:
       - ec2_vpc_subnet_facts:
