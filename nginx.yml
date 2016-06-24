@@ -153,13 +153,17 @@
     consul_template_use_upstart: true
     consul_template_template_files:
       - src: files/kubernetes-services.ctmpl
-      - src: files/mosquitto-services.ctmpl
+      - src: files/mosquitto-services-1883.ctmpl
+      - src: files/mosquitto-services-9001.ctmpl
     consul_template_templates:
       - name: kubernetes-services.ctmpl
         dest: "{{ nginx_conf_dir }}/conf.d/stream/kubernetes-services.conf"
         cmd: service nginx reload
-      - name: mosquitto-services.ctmpl
-        dest: "{{ nginx_conf_dir }}/conf.d/stream/mosquitto-services.conf"
+      - name: mosquitto-services-1883.ctmpl
+        dest: "{{ nginx_conf_dir }}/conf.d/stream/mosquitto-services-1883.conf"
+        cmd: service nginx reload
+      - name: mosquitto-services-9001.ctmpl
+        dest: "{{ nginx_conf_dir }}/conf.d/stream/mosquitto-services-9001.conf"
         cmd: service nginx reload
   pre_tasks:
     - block:

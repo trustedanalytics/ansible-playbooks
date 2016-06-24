@@ -271,6 +271,6 @@
     docker_url: "{{ docker_url }}"
   when: quay_io_username and quay_io_password
 
-- include: jupyter_build.yml
+- include: docker_images_build.yml
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

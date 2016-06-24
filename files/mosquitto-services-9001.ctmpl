@@ -1,4 +1,4 @@
-{{range service "mosquitto"}}
+{{range service "tap_mosquitto-9001"}}
 
 upstream backend-{{.Name}}-{{.Port}} {
     server {{.Address}}:{{.Port}};

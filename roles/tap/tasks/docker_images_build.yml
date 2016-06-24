@@ -19,6 +19,7 @@
   with_items:
     - jupyter-base
     - jupyter
+    - trustedanalytics-mosquitto
   when: not quay_io_username or not quay_io_password
 
 # TODO: Rewrite the following using native ansible modules
@@ -40,4 +41,5 @@
   with_items:
     - jupyter-base
     - jupyter
+    - trustedanalytics-mosquitto
   when: not quay_io_username or not quay_io_password
