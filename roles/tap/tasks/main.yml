@@ -237,6 +237,34 @@
     docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
 
+- docker:
+    name: h2oprovisioner
+    image: quay.io/trustedanalytics/h2o-provisioner
+    memory_limit: 1024000000
+    ports:
+      - 9876:8080
+      - 54310:54310
+      - 54311:54311
+      - 54312:54312
+      - 54313:54313
+      - 54314:54314
+      - 54315:54315
+      - 54316:54316
+      - 54317:54317
+      - 54318:54318
+      - 54319:54319
+    env:
+      DRIVER_PORT_LOWER: 54310
+      DRIVER_PORT_HIGHER: 54319
+      DRIVER_IP: "{{ docker_ip }}"
+      KRB_KDC: cdh-master-2.node.consul
+      KRB_REALM: CLOUDERA
+      KRB_USER: cf
+      KRB_PASSWORD: cf1
+    docker_api_version: 1.21
+    docker_url: "{{ docker_url }}"
+  when: quay_io_username and quay_io_password
+
 - include: jupyter_build.yml
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
