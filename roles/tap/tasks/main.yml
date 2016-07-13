@@ -45,13 +45,11 @@
 
 - template: src={{ item }}.yml.j2 dest={{ ansible_env['HOME'] }}/{{ item }}.yml
             validate='python -c "import yaml; yaml.load(file('%s', 'r'))"'
-  register: template_result
   with_items:
     - cf
     - docker-broker
 
 - shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
-  when: template_result.changed
   notify:
     - Deploy
   with_items:
@@ -110,7 +108,6 @@
   failed_when: shell_result.rc != 0 or not shell_result.stdout | search('tap_console')
 
 - shell: bosh --no-color -n deployment {{ ansible_env['HOME'] }}/{{ item }}.yml
-  when: template_result.changed
   notify:
     - Deploy
   with_items:
