@@ -15,15 +15,14 @@
 
 ---
 
-- name: Enable the 'optional' repository
-  command: yum-config-manager --enable \*optional\*
+- shell: rpm -qa kernel
+  register: kernels
+          
+- yum: name=dracut-modules-growroot state=present
   become: yes
-  when: ansible_distribution == 'Red Hat Enterprise Linux'
+  notify:
+    - rebuild initrd
 
-- name: Enable the 'extras' repository
-  command: yum-config-manager --enable \*extras\*
-  become: yes
-  when: ansible_distribution == 'Red Hat Enterprise Linux' and
-        ansible_lsb.major_release | int == 7
-
+- meta: flush_handlers      
+    
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

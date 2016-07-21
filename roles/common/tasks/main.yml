@@ -30,6 +30,17 @@
   - include: epel.yml
   when: ansible_os_family == 'RedHat'
 
+- block:
+  - include: growfs.yml
+  - lineinfile: dest=/etc/cloud/cloud.cfg regexp='^ - (scripts-user)$' line=' - [ \1, always ]' backrefs=yes
+    notify:
+      - restart server
+    become: yes
+  - meta: flush_handlers
+  when: ansible_distribution == 'CentOS' and
+        ansible_distribution_major_version == '6' and
+        ansible_system_vendor == 'OpenStack Foundation'
+
 - package: name={{ item }} state=present
   with_items: "{{ common_pkgs }}"
 

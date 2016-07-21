@@ -15,6 +15,26 @@
 
 ---
 
-- include: epel.yml
+- name: restart server
+  command: shutdown -r -t now 0 "Ansible updates triggered"
+  ignore_errors: true
+  become: yes
+
+- name: rebuild initrd
+  shell: >-
+    dracut -f /boot/initramfs-"{{ item|regex_replace('kernel-', '') }}".img
+    "{{ item|regex_replace('kernel-', '') }}"
+  with_items: "{{ kernels.stdout_lines }}"
+
+- name: Enable the 'optional' repository
+  command: yum-config-manager --enable \*optional\*
+  become: yes
+  when: ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: Enable the 'extras' repository
+  command: yum-config-manager --enable \*extras\*
+  become: yes
+  when: ansible_distribution == 'Red Hat Enterprise Linux' and
+        ansible_lsb.major_release | int == 7
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
