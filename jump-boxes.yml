@@ -83,7 +83,7 @@
       - lineinfile: dest=/etc/ansible/hosts insertafter='#jump-boxes' line='[tqd]' regexp='^\[tqd\]'
       - lineinfile: dest=/etc/ansible/hosts insertafter='[tqd]' line='[tqd:vars]' regexp='^\[tqd:vars\]'
       - lineinfile: dest=/etc/ansible/hosts line='{{ item.key }}={{ item.value }}'
-        with_dict: "{{ contents }}"
+        with_dict: "{{ contents|default({}) }}"
       - name: Set OpenStack cedentials
         set_fact:
           openstack: "{{ lookup('file', '/etc/openstack/clouds.yaml') | from_yaml }}"
