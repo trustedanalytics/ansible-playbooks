@@ -124,10 +124,23 @@
   - set_fact:
       docker_instance_id: "{{ shell_result.stdout }}"
 
+  - name: check routes
+    shell: aws --output text ec2 describe-route-tables --route-table-id {{ private_route_table.id }} --filter Name=route.destination-cidr-block,Values=172.17.0.0/16
+    environment:
+      AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+    register: routes
+
   - name: create route
     shell: "aws ec2 create-route --route-table-id {{ private_route_table.id }} --destination-cidr-block 172.17.0.0/16 --instance-id {{ docker_instance_id }}"
     environment:
       AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+    when: not routes.stdout
+
+  - name: replace route
+    shell: "aws ec2 replace-route --route-table-id {{ private_route_table.id }} --destination-cidr-block 172.17.0.0/16 --instance-id {{ docker_instance_id }}"
+    environment:
+      AWS_DEFAULT_REGION: "{{ region | mandatory }}"
+    when: routes.stdout
 
   - name: set source-dest-check
     shell: 'aws ec2 modify-instance-attribute --instance-id {{ docker_instance_id }} --source-dest-check "{\"Value\": false}"'
