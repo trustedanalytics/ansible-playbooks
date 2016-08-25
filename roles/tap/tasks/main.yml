@@ -284,6 +284,5 @@
       KRB_PASSWORD: cf1
     docker_api_version: 1.21
     docker_url: "{{ docker_url }}"
-  when: quay_io_username and quay_io_password
 
 # vi:et:sw=2 ts=2 sts=2 ft=ansible
