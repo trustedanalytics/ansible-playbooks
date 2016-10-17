@@ -219,6 +219,11 @@
     https_proxy: "{{ https_proxy | default() }}"
     ftp_proxy: "{{ ftp_proxy | default() }}"
   post_tasks:
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
+      become: yes
     - name: Singnal the NGINX wait condition handle for AWS
       command: cfn-signal -s true -r 'NGINX installed and configured.' {{ nginx_wait_condition_handle }}
       when: nginx_wait_condition_handle and provider == 'aws'
