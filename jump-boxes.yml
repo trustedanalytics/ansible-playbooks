@@ -137,10 +137,21 @@
   pre_tasks:
     # https://github.com/rvm/rvm/issues/3509
     # http://www.nokogiri.org/tutorials/installing_nokogiri.html#ubuntu___debian
-    - name: Install libgmp
-      apt: name=libgmp-dev state=present
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - libgmp-dev
+        - ntp
       become: yes
       when: ansible_distribution == 'Ubuntu'
+    - name: Start NTP and enable it on boot
+      service:
+        name: ntp
+        state: started
+        enabled: yes
+      become: yes
     - name: Generate passwords
       set_fact:
         "{{ item }}": "{{ lookup('password', playbook_dir + '/credentials/' + item + ' chars=ascii_letters,digits length=16') }}"
@@ -221,5 +232,4 @@
     - name: Signal the Docker Broker wait condition handle for OpenStack
       command: "{{ docker_broker_wait_condition_handle }} --data-binary '{\"status\": \"SUCCESS\"}'"
       when: docker_broker_wait_condition_handle and provider == 'openstack'
-
 # vi:et:sw=2 ts=2 sts=2 ft=ansible

@@ -198,7 +198,20 @@
       - set_fact:
           docker_cidr: "{{ openstack_subnets[0].cidr }}"
       when: provider == 'openstack'
-    - apt: name=python-passlib state=present
+    - name: Install required packages
+      apt:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - python-passlib
+        - ntp
+      become: yes
+    - name: Start NTP client and enable it on boot
+      service:
+        name: ntp
+        state: started
+        enabled: yes
+      become: yes
     - htpasswd: path=/etc/nginx/{{ auth_basic_user_file }}
                 name={{ docker_registry_user }}
                 password={{ docker_registry_password }}
