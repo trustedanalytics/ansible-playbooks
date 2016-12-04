@@ -31,7 +31,7 @@ bosh_cli_version: 1.3169.0
 bosh_release_version: 250
 bosh_release_sha1: 11b318d4ec9f0baf75d8afc6f78cf66f955d459f
 bosh_ntp: "{{ ntp_server | default(['0.pool.ntp.org', '1.pool.ntp.org']) }}"
-bosh_stemcell_version: 3104
+bosh_stemcell_version: 3263.8
 
 # CF CLI
 cf_cli_version: 6.13.0

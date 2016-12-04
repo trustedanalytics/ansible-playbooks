@@ -21,7 +21,7 @@ bosh_cpi_release_sha1: ef97bfaff05989ab006e88d28763feb8fbb32d45
 bosh_cpi_release_url: https://bosh.io/d/github.com/cloudfoundry-incubator/bosh-aws-cpi-release?v={{ bosh_cpi_release_version }}
 
 # BOSH Stemcell
-bosh_stemcell_sha1: 624c3ea55cbdb7143ffecf36d7e8c0275926a824
+bosh_stemcell_sha1: 95ecc2709ac62f21d0a1c6cac023585c3919b825
 bosh_stemcell_url: https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v={{ bosh_stemcell_version }}
 
 bosh_instance_type: m3.medium
