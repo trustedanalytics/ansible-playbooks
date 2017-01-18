@@ -206,6 +206,20 @@
         - python-passlib
         - ntp
       become: yes
+    - name: Reset public NTP servers
+      lineinfile:
+        dest: /etc/ntp.conf
+        state: absent
+        regexp: '^server'
+      become: yes
+      when: provider == 'openstack'
+    - name: Set custom NTP servers
+      lineinfile:
+        dest: /etc/ntp.conf
+        line: "server {{ item }}"
+      with_items: "{{ bosh_ntp }}"
+      become: yes
+      when: provider == 'openstack'
     - name: Start NTP client and enable it on boot
       service:
         name: ntp
